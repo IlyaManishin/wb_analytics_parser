@@ -9,7 +9,7 @@ class SalesEntry(BaseModel):
     brand: str
     month_sales: int
     middle_in_day_sales: int
-    week_income: int
+    period_income: int
     no_available_days: int
     
     days_stats: list[DayStats]

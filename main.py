@@ -1,11 +1,17 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
-from parser import period_sales
+from config import app
 from parser.data import models
+from tasks import register_tasks
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    register_tasks()
+    yield
+    
+app = FastAPI(lifespan=lifespan)
 
 
-app = FastAPI()
 
-@app.post("period-sales")
-def get_period_sales(token: str) -> list[models.SalesEntry]:
-    return []
+    
