@@ -3,6 +3,7 @@ import time
 import json
 from enum import Enum
 from typing import Union
+import logging
 
 from .parser_config import *
 from .parser_exceptions import *
@@ -51,3 +52,46 @@ def api_get(url: str, headers: dict, attempts: int = REQUEST_ATTEMPT_COUNT) -> U
 
 def api_post(url: str, headers: dict, body: dict, attempts: int = REQUEST_ATTEMPT_COUNT) -> Union[list[dict], dict]:
     return _send_request(url, headers, attempts, RequestTypes.POST, body)
+
+
+def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
+    tryings = 3
+    values = None
+    for i in range(tryings):
+        try:
+            values = service.spreadsheets().values().get(spreadsheetId=spreadsheets_id,
+                                                         range=f"{name}!{table_range}").execute()["values"]
+            break
+        except Exception as err:
+            logging.error(err)
+            continue
+    if not values:
+        return []
+    return values
+
+
+def get_profitability_articles() -> list[int]:
+    data = read_table(table_id, PROFITABILITY_SHEET_NAME,
+                      PROFITABILITY_ARTICLES_RANGE)
+    if not data:
+        return None
+    articles = []
+    try:
+        for row in data:
+            if len(row) == 0:
+                break
+            article = int(row[0])
+            articles.append(article)
+    except:
+        pass
+    return articles
+
+def get_wb_token() ->str:
+    data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
+    if not data:
+        return None
+    try:
+        return data[0][0].strip("\n, ")
+    except:
+        return None
+            

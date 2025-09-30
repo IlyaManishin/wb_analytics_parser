@@ -1,5 +1,5 @@
 **/venv
 **/__pycache__
-**/test.*
+**/test.json
 **/*_backup.py
 **/security_settings/** 

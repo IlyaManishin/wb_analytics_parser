@@ -9,4 +9,3 @@ logging.basicConfig(
     ]
 )
 
-DAYS_SALES_STATS = 10
