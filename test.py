@@ -1,6 +1,6 @@
 from parser import period_sales
 from parser import utils
-
+import config
 
 def prof_articles_test():
     articles = utils.get_profitability_articles()
@@ -26,4 +26,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    period_sales.period_sales_task()

@@ -42,8 +42,8 @@ def _send_request(url: str, headers: dict, attempts: int, mode: RequestTypes, bo
             raise
         except Exception as err:
             time.sleep(REQUEST_WAIT_SEC)
-
-    raise InvalidRequestExc(url, resp.text if resp else "")
+    logging.error(f"Invalid request: url={url}" + f", status={resp.status_code}" if resp else "")
+    return None
 
 
 def api_get(url: str, headers: dict, attempts: int = REQUEST_ATTEMPT_COUNT) -> Union[list[dict], dict]:

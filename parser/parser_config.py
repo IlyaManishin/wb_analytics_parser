@@ -11,7 +11,8 @@ REQUEST_WAIT_SEC = 5
 SALES_STATS_URL = "https://seller-analytics-api.wildberries.ru/api/v2/stocks-report/products/products"
 SALES_URL = "https://statistics-api.wildberries.ru/api/v1/supplier/sales"
 SALES_PERIOD_DAYS = 30
-SALES_DAYS_COUNT = 10
+DIFF_DAYS_COUNT = 10
+SALES_STATS_SHEET_NAME = "test"
 
 PROFITABILITY_ARTICLES_RANGE = "A12:A"
 PROFITABILITY_SHEET_NAME = "Рентабельность"

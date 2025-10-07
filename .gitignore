@@ -3,3 +3,5 @@
 **/test.json
 **/*_backup.py
 **/security_settings/** 
+**/*.json
+**/*.log
