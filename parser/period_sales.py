@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timedelta, date
 from dataclasses import dataclass
 from pydantic import BaseModel
-import json
+import time
 
 from . import parser_config as pconfig
 from .parser_config import service
@@ -12,7 +12,7 @@ from . import parser_exceptions as exc
 
 class DayStats(BaseModel):
     sales_count: int
-    difference: int
+    stocks_count: int
 
 
 class SalesStat(BaseModel):
@@ -78,7 +78,8 @@ def get_period_stats(token: str, articles: list[int], start: datetime, end: date
         }
 
         headers = utils.get_auth_header(token)
-        result = utils.api_post(pconfig.SALES_STATS_URL, headers, body)
+        result = utils.api_post(pconfig.SALES_STATS_URL, headers, body, req_wait_sec=20)
+        time.sleep(20)
 
         items = result.get("data", {}).get("items", [])
         if not items:
@@ -116,70 +117,66 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
     now = datetime.now()
 
     end_date = now - timedelta(days=1)
-    start_date = end_date - timedelta(days=pconfig.SALES_PERIOD_DAYS - 1)
+    start_date = end_date - timedelta(days=pconfig.DIFF_DAYS_COUNT - 1)
 
-    month_stats = get_period_stats(
-        token, articles, end_date - timedelta(days=30), end_date)
-    month_sales = get_period_sales(token, start_date)
-    if not month_stats or not month_sales:
-        return None
+    month_stats = get_period_stats(token, articles, start_date, end_date)
 
-    date_range = [(end_date - timedelta(days=d)).date()
-                  for d in range(pconfig.DIFF_DAYS_COUNT + 1)]
+    month_data = {}
+    for item in month_stats:
+        article = item["nmID"]
+        metrics = item.get("metrics", [])
 
-    sales_by_article_date = {a: {d: 0 for d in date_range} for a in articles}
-
-    for sale in month_sales:
-        if sale.article in sales_by_article_date and sale.date in sales_by_article_date[sale.article]:
-            sales_by_article_date[sale.article][sale.date] += 1
-
-    sales_stats = []
-    month_stats_dict = {item.get("nmID"): item for item in month_stats}
-
-    for art_data in articles_data:
-        article = art_data.article
-        item = month_stats_dict.get(article, {})
-        metrics = item.get("metrics", {})
         avg_sales = metrics.get("avgOrders", 0)
         period_income = metrics.get("ordersSum", 0)
+        not_available = metrics.get("officeMissingTime", {}).get("days", 30)
 
-        article_sales = sales_by_article_date.get(article, {})
-        sorted_dates = sorted(article_sales.keys())
-        not_available = metrics.get("officeMissingTime", {}).get("days", 0)
-
-        days_stats = []
-        total_sales = 0
-
-        for i in range(1, len(sorted_dates)):
-            day_date = sorted_dates[i]
-            prev_date = sorted_dates[i - 1]
-
-            sales_count = article_sales[day_date]
-            prev_sales = article_sales[prev_date]
-            difference = sales_count - prev_sales
-
-            total_sales += sales_count
-            days_stats.append(
-                DayStats(sales_count=sales_count, difference=difference))
-
-        sales_stat = SalesStat(
-            article=str(article),
-            seller_article=art_data.seller_article,
-            brand=art_data.brand,
-            month_sales=sum(article_sales.values()),
+        month_data[article] = dict(
+            period_sales=period_income,
             middle_in_day_sales=avg_sales,
-            period_income=period_income,
             no_available_days=not_available,
-            days_stats=days_stats
         )
 
-        sales_stats.append(sales_stat)
-    return sales_stats
+    date_range = [(start_date + timedelta(days=d)) for d in range(pconfig.DIFF_DAYS_COUNT)]
+    article_daily_data = {a: {} for a in articles}
 
+    for day in date_range:
+        day_stats = get_period_stats(token, articles, day, day)
+        for item in day_stats:
+            article = item["nmID"]
+            metrics = item.get("metrics", {})
+            if not metrics:
+                continue
+            orders = metrics.get("ordersCount", 0)
+            stocks = metrics.get("stocksCount", 0)
+            if article in article_daily_data:
+                article_daily_data[article][day.date()] = (orders, stocks)
+
+    sales_stats = []
+    for art_data in articles_data:
+        art = art_data.article
+        mdata = month_data.get(art, {})
+
+        days_stats = []
+        for day in date_range:
+            sales_count, stocks_count = article_daily_data.get(art, {}).get(day.date(), (0, 0))
+            days_stats.append(DayStats(sales_count=sales_count, stocks_count=stocks_count))
+
+        sales_stats.append(SalesStat(
+            article=art,
+            seller_article=art_data.seller_article,
+            brand=art_data.brand,
+            month_sales=mdata.get("month_sales", 0),
+            middle_in_day_sales=mdata.get("middle_in_day_sales", 0.0),
+            period_income=mdata.get("period_sales", 0),
+            no_available_days=mdata.get("no_available_days", 0),
+            days_stats=days_stats
+        ))
+
+    return sales_stats
 
 def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: list[SalesStat]) -> list[list]:
     base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
-                    "Среднее количество заказов в день", "Выручка за 7 дней (руб)", "Товара нет в наличии (дней)"]
+                    "Среднее количество заказов в день", "Выручка за 30 дней (руб)", "Товара нет в наличии (дней)"]
     data = []
     data.append(["", "Дата обновления:",
                 datetime.now().strftime(r"%Y-%m-%d %H:%M")])
@@ -191,7 +188,7 @@ def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: 
     header_down = []
     header_down += base_columns
     for i in range(pconfig.DIFF_DAYS_COUNT):
-        header_down += ["Заказы", "Динамика"]
+        header_down += ["Заказы", "Остатки"]
     data.append(header_down)
 
     article_res = {}
@@ -216,7 +213,7 @@ def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: 
 
             for day_stat in stat.days_stats:
                 row.append(day_stat.sales_count)
-                row.append(day_stat.difference)
+                row.append(day_stat.stocks_count)
             data.append(row)
     return data
 

@@ -26,18 +26,23 @@ def get_auth_header(token: str) -> dict:
     return header
 
 
-def _send_request(url: str, headers: dict, attempts: int, mode: RequestTypes, body: dict = None) -> Union[list[dict], dict]:
+def _send_request(url: str, 
+                  headers: dict, 
+                  attempts: int,
+                  on_error_wait_sec: int,
+                  mode: RequestTypes,
+                  body: dict = None) -> Union[list[dict], dict]:
     resp = None
     for i in range(attempts):
         try:
             if mode == RequestTypes.GET:
                 resp = requests.get(url, headers=headers,
-                                    timeout=REQUEST_WAIT_SEC)
+                                    timeout=on_error_wait_sec)
             elif mode == RequestTypes.POST:
                 if body is None:
                     body = {}
                 resp = requests.post(url, headers=headers,
-                                     json=body, timeout=REQUEST_WAIT_SEC)
+                                     json=body, timeout=on_error_wait_sec)
             if resp.status_code == 401:
                 raise UnathorizedExc()
             if resp.status_code != 200:
@@ -48,17 +53,23 @@ def _send_request(url: str, headers: dict, attempts: int, mode: RequestTypes, bo
         except UnathorizedExc as err:
             raise
         except Exception as err:
-            time.sleep(REQUEST_WAIT_SEC)
+            if resp and resp.status_code != 429:
+                logging.exception(err)
+            time.sleep(on_error_wait_sec)
     logging.error(f"Invalid request: url={url}" + f", status={resp.status_code}" if resp else "")
     return None
 
 
-def api_get(url: str, headers: dict, attempts: int = REQUEST_ATTEMPT_COUNT) -> Union[list[dict], dict]:
-    return _send_request(url, headers, attempts, RequestTypes.GET)
+def api_get(url: str, headers: dict,
+            attempts: int = REQUEST_ATTEMPT_COUNT,
+            req_wait_sec = REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
+    return _send_request(url, headers, attempts, req_wait_sec, RequestTypes.GET)
 
 
-def api_post(url: str, headers: dict, body: dict, attempts: int = REQUEST_ATTEMPT_COUNT) -> Union[list[dict], dict]:
-    return _send_request(url, headers, attempts, RequestTypes.POST, body)
+def api_post(url: str, headers: dict, body: dict,
+             attempts: int = REQUEST_ATTEMPT_COUNT,
+             req_wait_sec = REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
+    return _send_request(url, headers, attempts, req_wait_sec, RequestTypes.POST, body)
 
 
 def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
@@ -93,7 +104,7 @@ def get_article_data() -> list[ArticleData]:
             res.append(ArticleData(article=article, seller_article=seller_article, brand=brand))
     except:
         pass
-    return res[:100] #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return res[:900] #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 def get_wb_token() ->str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
