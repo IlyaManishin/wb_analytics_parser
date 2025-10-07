@@ -4,6 +4,7 @@ import json
 from enum import Enum
 from typing import Union
 import logging
+from pydantic import BaseModel
 
 from .parser_config import *
 from .parser_exceptions import *
@@ -12,6 +13,12 @@ from .parser_exceptions import *
 class RequestTypes(Enum):
     GET = "GET"
     POST = "POST"
+    
+class ArticleData(BaseModel):
+    article: int
+    seller_article: str
+    brand: str
+    
 
 
 def get_auth_header(token: str) -> dict:
@@ -70,21 +77,23 @@ def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
     return values
 
 
-def get_profitability_articles() -> list[int]:
+def get_article_data() -> list[ArticleData]:
     data = read_table(table_id, PROFITABILITY_SHEET_NAME,
                       PROFITABILITY_ARTICLES_RANGE)
     if not data:
         return None
-    articles = []
+    res = []
     try:
         for row in data:
-            if len(row) == 0:
-                break
+            if len(row) < 3:
+                continue
             article = int(row[0])
-            articles.append(article)
+            seller_article = row[1]
+            brand = row[2]
+            res.append(ArticleData(article=article, seller_article=seller_article, brand=brand))
     except:
         pass
-    return articles
+    return res[:100] #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 def get_wb_token() ->str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)

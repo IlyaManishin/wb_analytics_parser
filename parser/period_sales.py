@@ -20,7 +20,7 @@ class SalesStat(BaseModel):
     seller_article: str
     brand: str
     month_sales: int
-    middle_in_day_sales: int
+    middle_in_day_sales: float
     period_income: int
     no_available_days: int
 
@@ -111,7 +111,8 @@ def get_period_sales(token: str, start_date: datetime) -> list[Sale]:
     return res
 
 
-def get_sales_stats(token, articles: list[int]) -> list[SalesStat]:
+def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[SalesStat]:
+    articles = [i.article for i in articles_data]
     now = datetime.now()
 
     end_date = now - timedelta(days=1)
@@ -123,8 +124,8 @@ def get_sales_stats(token, articles: list[int]) -> list[SalesStat]:
     if not month_stats or not month_sales:
         return None
 
-    date_range = [(start_date + timedelta(days=d)).date()
-                  for d in range(pconfig.SALES_PERIOD_DAYS + 1)]
+    date_range = [(end_date - timedelta(days=d)).date()
+                  for d in range(pconfig.DIFF_DAYS_COUNT + 1)]
 
     sales_by_article_date = {a: {d: 0 for d in date_range} for a in articles}
 
@@ -135,13 +136,14 @@ def get_sales_stats(token, articles: list[int]) -> list[SalesStat]:
     sales_stats = []
     month_stats_dict = {item.get("nmID"): item for item in month_stats}
 
-    for article_id in articles:
-        item = month_stats_dict.get(article_id, {})
-        seller_article = item.get("vendorCode", "")
-        brand = item.get("brandName", "")
+    for art_data in articles_data:
+        article = art_data.article
+        item = month_stats_dict.get(article, {})
         metrics = item.get("metrics", {})
+        avg_sales = metrics.get("avgOrders", 0)
+        period_income = metrics.get("ordersSum", 0)
 
-        article_sales = sales_by_article_date.get(article_id, {})
+        article_sales = sales_by_article_date.get(article, {})
         sorted_dates = sorted(article_sales.keys())
         not_available = metrics.get("officeMissingTime", {}).get("days", 0)
 
@@ -161,12 +163,12 @@ def get_sales_stats(token, articles: list[int]) -> list[SalesStat]:
                 DayStats(sales_count=sales_count, difference=difference))
 
         sales_stat = SalesStat(
-            article=str(article_id),
-            seller_article=seller_article,
-            brand=brand,
+            article=str(article),
+            seller_article=art_data.seller_article,
+            brand=art_data.brand,
             month_sales=sum(article_sales.values()),
-            middle_in_day_sales=int(total_sales / max(len(days_stats), 1)),
-            period_income=metrics.get("ordersSum", 0),
+            middle_in_day_sales=avg_sales,
+            period_income=period_income,
             no_available_days=not_available,
             days_stats=days_stats
         )
@@ -175,7 +177,7 @@ def get_sales_stats(token, articles: list[int]) -> list[SalesStat]:
     return sales_stats
 
 
-def convert_sales_stats_to_table(articles: list[int], stats: list[SalesStat]) -> list[list]:
+def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: list[SalesStat]) -> list[list]:
     base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
                     "Среднее количество заказов в день", "Выручка за 7 дней (руб)", "Товара нет в наличии (дней)"]
     data = []
@@ -191,12 +193,13 @@ def convert_sales_stats_to_table(articles: list[int], stats: list[SalesStat]) ->
     for i in range(pconfig.DIFF_DAYS_COUNT):
         header_down += ["Заказы", "Динамика"]
     data.append(header_down)
-    
+
     article_res = {}
     for i in stats:
         article_res[i.article] = i
 
-    for article in articles:
+    for i in articles_data:
+        article = i.article
         if article not in article_res:
             data.append([])
         else:
@@ -216,6 +219,7 @@ def convert_sales_stats_to_table(articles: list[int], stats: list[SalesStat]) ->
                 row.append(day_stat.difference)
             data.append(row)
     return data
+
 
 def save_sales_stats_to_sheet(data: list[list]):
     spreadsheet_id = pconfig.table_id
@@ -245,17 +249,17 @@ def save_sales_stats_to_sheet(data: list[list]):
 
 
 def period_sales_task():
-    articles = utils.get_profitability_articles()
-    if not articles:
+    articles_data = utils.get_article_data()
+    if not articles_data:
         logging.error("No profitability articles")
     token = utils.get_wb_token()
     if not token:
         logging.error("No wb token")
 
-    stats = get_sales_stats(token, articles)
+    stats = get_sales_stats(token, articles_data)
     if not stats:
         logging.error("Can't get stats")
-    google_data = convert_sales_stats_to_table(articles, stats)
+    google_data = convert_sales_stats_to_table(articles_data, stats)
     save_sales_stats_to_sheet(google_data)
     # with open("res.json", "w", encoding="utf-8") as file:
     #     dump_data = [i.model_dump() for i in res]
