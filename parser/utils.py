@@ -104,7 +104,7 @@ def get_article_data() -> list[ArticleData]:
             res.append(ArticleData(article=article, seller_article=seller_article, brand=brand))
     except:
         pass
-    return res[:900] #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return res #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 def get_wb_token() ->str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)

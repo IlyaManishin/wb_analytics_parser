@@ -21,7 +21,7 @@ class SalesStat(BaseModel):
     brand: str
     month_sales: int
     middle_in_day_sales: float
-    period_income: int
+    month_income: int
     no_available_days: int
 
     days_stats: list[DayStats]
@@ -126,13 +126,15 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
         article = item["nmID"]
         metrics = item.get("metrics", [])
 
+        month_sales = metrics.get("ordersCount", 0)
         avg_sales = metrics.get("avgOrders", 0)
         period_income = metrics.get("ordersSum", 0)
         not_available = metrics.get("officeMissingTime", {}).get("days", 30)
 
         month_data[article] = dict(
-            period_sales=period_income,
+            month_sales=month_sales,
             middle_in_day_sales=avg_sales,
+            month_income=period_income,
             no_available_days=not_available,
         )
 
@@ -147,7 +149,7 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
             if not metrics:
                 continue
             orders = metrics.get("ordersCount", 0)
-            stocks = metrics.get("stocksCount", 0)
+            stocks = metrics.get("stockCount", 0)
             if article in article_daily_data:
                 article_daily_data[article][day.date()] = (orders, stocks)
 
@@ -167,7 +169,7 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
             brand=art_data.brand,
             month_sales=mdata.get("month_sales", 0),
             middle_in_day_sales=mdata.get("middle_in_day_sales", 0.0),
-            period_income=mdata.get("period_sales", 0),
+            month_income=mdata.get("month_income", 0),
             no_available_days=mdata.get("no_available_days", 0),
             days_stats=days_stats
         ))
@@ -208,7 +210,7 @@ def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: 
             row.append(stat.brand)
             row.append(stat.month_sales)
             row.append(stat.middle_in_day_sales)
-            row.append(stat.period_income)
+            row.append(stat.month_income)
             row.append(stat.no_available_days)
 
             for day_stat in stat.days_stats:
