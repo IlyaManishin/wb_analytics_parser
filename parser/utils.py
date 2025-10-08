@@ -6,7 +6,7 @@ from typing import Union
 import logging
 from pydantic import BaseModel
 
-from .parser_config import *
+from .parsers_config import *
 from .parser_exceptions import *
 
 

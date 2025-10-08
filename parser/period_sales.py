@@ -1,13 +1,18 @@
 import logging
 from datetime import datetime, timedelta, date
-from dataclasses import dataclass
 from pydantic import BaseModel
 import time
+from dataclasses import dataclass
 
-from . import parser_config as pconfig
-from .parser_config import service
+from . import parsers_config as pconfig
+from .parsers_config import service
 from . import utils
-from . import parser_exceptions as exc
+
+
+@dataclass
+class _RunConfig:
+    DIFF_DAYS_COUNT: int
+    IS_DEBUG: bool
 
 
 class DayStats(BaseModel):
@@ -30,20 +35,6 @@ class SalesStat(BaseModel):
 class Sale(BaseModel):
     article: int
     date: date
-
-
-def init_sales_entry(article: int, warehouseName: str, supplierArticle: str, subject: str, brand: str) -> SalesStat:
-    entry = SalesStat(article=article,
-                      brand=brand,
-                      middle_in_day_sales=0, period_income=0, no_available_days=0,
-                      days_stats=[])
-    for i in range(pconfig.SALES_PERIOD_DAYS + 1):
-        entry.days_stats.append(DayStats(sales_count=0, difference=0))
-    return entry
-
-
-def init_empty_sales_entry(article: int):
-    return init_sales_entry(article, "", "", "", "")
 
 
 def get_period_stats(token: str, articles: list[int], start: datetime, end: datetime) -> list[dict]:
@@ -78,7 +69,8 @@ def get_period_stats(token: str, articles: list[int], start: datetime, end: date
         }
 
         headers = utils.get_auth_header(token)
-        result = utils.api_post(pconfig.SALES_STATS_URL, headers, body, req_wait_sec=20)
+        result = utils.api_post(pconfig.SALES_STATS_URL,
+                                headers, body, req_wait_sec=20)
         time.sleep(20)
 
         items = result.get("data", {}).get("items", [])
@@ -112,14 +104,16 @@ def get_period_sales(token: str, start_date: datetime) -> list[Sale]:
     return res
 
 
-def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[SalesStat]:
+def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.ArticleData]) -> list[SalesStat]:
     articles = [i.article for i in articles_data]
     now = datetime.now()
 
     end_date = now - timedelta(days=1)
-    start_date = end_date - timedelta(days=pconfig.DIFF_DAYS_COUNT - 1)
+    start_date = end_date - timedelta(days=config.DIFF_DAYS_COUNT - 1)
 
     month_stats = get_period_stats(token, articles, start_date, end_date)
+    if not month_stats:
+        return None
 
     month_data = {}
     for item in month_stats:
@@ -138,11 +132,15 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
             no_available_days=not_available,
         )
 
-    date_range = [(start_date + timedelta(days=d)) for d in range(pconfig.DIFF_DAYS_COUNT)]
+    date_range = [(start_date + timedelta(days=d))
+                  for d in range(config.DIFF_DAYS_COUNT)]
     article_daily_data = {a: {} for a in articles}
 
     for day in date_range:
         day_stats = get_period_stats(token, articles, day, day)
+        if not day_stats:
+            continue
+
         for item in day_stats:
             article = item["nmID"]
             metrics = item.get("metrics", {})
@@ -160,8 +158,10 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
 
         days_stats = []
         for day in date_range:
-            sales_count, stocks_count = article_daily_data.get(art, {}).get(day.date(), (0, 0))
-            days_stats.append(DayStats(sales_count=sales_count, stocks_count=stocks_count))
+            sales_count, stocks_count = article_daily_data.get(
+                art, {}).get(day.date(), (0, 0))
+            days_stats.append(
+                DayStats(sales_count=sales_count, stocks_count=stocks_count))
 
         sales_stats.append(SalesStat(
             article=art,
@@ -176,20 +176,23 @@ def get_sales_stats(token, articles_data: list[utils.ArticleData]) -> list[Sales
 
     return sales_stats
 
-def convert_sales_stats_to_table(articles_data: list[utils.ArticleData], stats: list[SalesStat]) -> list[list]:
+
+def convert_sales_stats_to_table(rconfig: _RunConfig,
+                                 articles_data: list[utils.ArticleData],
+                                 stats: list[SalesStat]) -> list[list]:
     base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
                     "Среднее количество заказов в день", "Выручка за 30 дней (руб)", "Товара нет в наличии (дней)"]
     data = []
     data.append(["", "Дата обновления:",
                 datetime.now().strftime(r"%Y-%m-%d %H:%M")])
     header_up = [""] * len(base_columns)
-    for i in range(pconfig.DIFF_DAYS_COUNT, 0, -1):
+    for i in range(rconfig.DIFF_DAYS_COUNT, 0, -1):
         header_up += [f"{i} д. назад"] * 2
     data.append(header_up)
 
     header_down = []
     header_down += base_columns
-    for i in range(pconfig.DIFF_DAYS_COUNT):
+    for i in range(rconfig.DIFF_DAYS_COUNT):
         header_down += ["Заказы", "Остатки"]
     data.append(header_down)
 
@@ -234,6 +237,7 @@ def save_sales_stats_to_sheet(data: list[list]):
     ).execute()
 
     tryings = 3
+    is_valid = False
     for _ in range(tryings):
         try:
             service.spreadsheets().values().update(
@@ -242,24 +246,35 @@ def save_sales_stats_to_sheet(data: list[list]):
                 valueInputOption="RAW",
                 body=body
             ).execute()
+            is_valid = True
             break
         except:
             pass
+    if not is_valid:
+        logging.error("Google sheets access error")
 
 
-def period_sales_task():
+def _period_sales_task_internal(config: _RunConfig):
     articles_data = utils.get_article_data()
     if not articles_data:
         logging.error("No profitability articles")
+        return
     token = utils.get_wb_token()
     if not token:
         logging.error("No wb token")
+        return
 
-    stats = get_sales_stats(token, articles_data)
+    stats = read_sales_stats(token, articles_data)
     if not stats:
         logging.error("Can't get stats")
+        return
     google_data = convert_sales_stats_to_table(articles_data, stats)
     save_sales_stats_to_sheet(google_data)
+
+
+def period_sales_task():
+    config = _RunConfig(pconfig.DIFF_DAYS_COUNT, False)
+    _period_sales_task_internal(config)
     # with open("res.json", "w", encoding="utf-8") as file:
     #     dump_data = [i.model_dump() for i in res]
     #     file.write(json.dumps(dump_data, ensure_ascii=False))

@@ -1,18 +1,22 @@
 import os
-import googleapiclient.discovery
-import httplib2
-from oauth2client.service_account import ServiceAccountCredentials
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+
+#PORT = 8000
 
 REQUEST_ATTEMPT_COUNT = 3
 REQUEST_WAIT_SEC = 5
 
+#____SALES_STATS___
 SALES_STATS_URL = "https://seller-analytics-api.wildberries.ru/api/v2/stocks-report/products/products"
 SALES_URL = "https://statistics-api.wildberries.ru/api/v1/supplier/sales"
 SALES_PERIOD_DAYS = 30
 DIFF_DAYS_COUNT = 10
 SALES_STATS_SHEET_NAME = "test"
+
+#____VORONKA_STATS____
+VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
+
 
 PROFITABILITY_ARTICLES_RANGE = "A12:C"
 PROFITABILITY_SHEET_NAME = "Рентабельность"

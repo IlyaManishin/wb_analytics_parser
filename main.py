@@ -1,17 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
+from datetime import datetime
 
-from config import app
-from parser.data import models
 from tasks import register_tasks
+from parser import voronka_stats
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     register_tasks()
     yield
-    
+
 app = FastAPI(lifespan=lifespan)
 
 
-
-    
+@app.get("/voronka-stats", response_model=list[voronka_stats.VoronkaStat])
+def funnel_stats_handler(
+    token: str = Query(..., description="Токен авторизации WB"),
+    start_date: datetime = Query(..., description="Начало периода"),
+    end_date: datetime = Query(..., description="Конец периода"),
+):
+    stats = voronka_stats.get_voronka_stats(token, start_date, end_date)
+    return stats
