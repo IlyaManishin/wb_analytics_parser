@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from . import parsers_config as pconfig
 from .parsers_config import service
 from . import utils
+from .data import db
 
 
 @dataclass
@@ -47,8 +48,8 @@ def get_period_stats(token: str, articles: list[int], start: datetime, end: date
         body = {
             "nmIDs": batch,
             "currentPeriod": {
-                "start": start.strftime("%Y-%m-%d"),
-                "end": end.strftime("%Y-%m-%d")
+                "start": start.strftime(r"%Y-%m-%d"),
+                "end": end.strftime(r"%Y-%m-%d")
             },
             "stockType": "",
             "skipDeletedNm": True,
@@ -115,6 +116,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
     if not month_stats:
         return None
 
+    today_stocks: dict[int, int] = {}
     month_data = {}
     for item in month_stats:
         article = item["nmID"]
@@ -125,13 +127,17 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
         period_income = metrics.get("ordersSum", 0)
         not_available = metrics.get("officeMissingTime", {}).get("days", 30)
 
+        stocks = metrics.get("stockCount", 0)
+        today_stocks[article] = stocks
+        
         month_data[article] = dict(
             month_sales=month_sales,
             middle_in_day_sales=avg_sales,
             month_income=period_income,
             no_available_days=not_available,
         )
-
+    db.save_daily_stocks(today_stocks, datetime.now().date())
+    
     date_range = [(start_date + timedelta(days=d))
                   for d in range(config.DIFF_DAYS_COUNT)]
     article_daily_data = {a: {} for a in articles}
@@ -147,7 +153,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             if not metrics:
                 continue
             orders = metrics.get("ordersCount", 0)
-            stocks = metrics.get("stockCount", 0)
+            
             if article in article_daily_data:
                 article_daily_data[article][day.date()] = (orders, stocks)
 
@@ -254,7 +260,7 @@ def save_sales_stats_to_sheet(data: list[list]):
         logging.error("Google sheets access error")
 
 
-def _period_sales_task_internal(config: _RunConfig):
+def _period_sales_task_internal(rconfig: _RunConfig):
     articles_data = utils.get_article_data()
     if not articles_data:
         logging.error("No profitability articles")
@@ -264,17 +270,17 @@ def _period_sales_task_internal(config: _RunConfig):
         logging.error("No wb token")
         return
 
-    stats = read_sales_stats(token, articles_data)
+    stats = read_sales_stats(token, rconfig, articles_data)
     if not stats:
         logging.error("Can't get stats")
         return
-    google_data = convert_sales_stats_to_table(articles_data, stats)
+    google_data = convert_sales_stats_to_table(rconfig, articles_data, stats)
     save_sales_stats_to_sheet(google_data)
 
 
 def period_sales_task():
-    config = _RunConfig(pconfig.DIFF_DAYS_COUNT, False)
-    _period_sales_task_internal(config)
+    rconfig = _RunConfig(pconfig.DIFF_DAYS_COUNT, False)
+    _period_sales_task_internal(rconfig)
     # with open("res.json", "w", encoding="utf-8") as file:
     #     dump_data = [i.model_dump() for i in res]
     #     file.write(json.dumps(dump_data, ensure_ascii=False))

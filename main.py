@@ -8,6 +8,7 @@ from parser import voronka_stats
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    
     register_tasks()
     yield
 

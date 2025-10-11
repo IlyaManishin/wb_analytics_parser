@@ -12,7 +12,7 @@ SALES_STATS_URL = "https://seller-analytics-api.wildberries.ru/api/v2/stocks-rep
 SALES_URL = "https://statistics-api.wildberries.ru/api/v1/supplier/sales"
 SALES_PERIOD_DAYS = 30
 DIFF_DAYS_COUNT = 10
-SALES_STATS_SHEET_NAME = "test"
+SALES_STATS_SHEET_NAME = "Продажи 10 дней"
 
 #____VORONKA_STATS____
 VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"

@@ -46,8 +46,8 @@ def run_tests():
 
 
 def main():
-    run_tests()
-    # period_sales.period_sales_task()
+    # run_tests()
+    period_sales.period_sales_task()
 
 
 if __name__ == "__main__":
