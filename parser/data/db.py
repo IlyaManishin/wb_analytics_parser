@@ -1,12 +1,14 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 from typing import Dict, Optional
-from sqlalchemy import create_engine, Integer, Date, select
+from sqlalchemy import create_engine, Integer, Date, select, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 BASE_NAME = "table.db"
 TEST_NAME = "test.db"
+
+MAX_DAYS_SALES = 20
 
 _sessionMaker = None
 
@@ -20,6 +22,12 @@ class DailyStock(Base):
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     stock_count: Mapped[int] = mapped_column(Integer, nullable=False)
 
+def _delete_old_records():
+    cutoff_date = date.today() - timedelta(days=MAX_DAYS_SALES)
+    with get_session() as session:
+        stmt = delete(DailyStock).where(DailyStock.day < cutoff_date)
+        session.execute(stmt)
+        session.commit()
 
 def init_db(file_name: str = BASE_NAME):
     global _sessionMaker
@@ -32,6 +40,8 @@ def init_db(file_name: str = BASE_NAME):
     engine = create_engine(db_path, echo=False)
     _sessionMaker = sessionmaker(bind=engine)
     Base.metadata.create_all(engine)
+
+    _delete_old_records()
     
 def init_test_db():
     global _is_test_db
