@@ -132,7 +132,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
 
         stocks = metrics.get("stockCount", 0)
         today_stocks[article] = stocks
-        
+
         month_data[article] = dict(
             month_sales=month_sales,
             middle_in_day_sales=avg_sales,
@@ -142,7 +142,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             availability=metrics.get("availability", "")
         )
     db.save_daily_stocks(today_stocks, datetime.now().date())
-    
+
     date_range = [(start_date + timedelta(days=d))
                   for d in range(config.DIFF_DAYS_COUNT)]
     article_daily_data = {a: {} for a in articles}
@@ -194,19 +194,24 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
                                  articles_data: list[utils.ArticleData],
                                  stats: list[SalesStat]) -> list[list]:
     base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
-                    "Среднее количество заказов в день", "Выручка за 30 дней (руб)", "Товара нет в наличии (дней)"]
+                    "Среднее количество заказов в день", "Выручка за 30 дней (руб)",
+                    "Товара нет в наличии (дней)"]
+    last_columns = ["Оборачиваемость", "Доступность"]
+
     data = []
     data.append(["", "Дата обновления:",
                 datetime.now().strftime(r"%Y-%m-%d %H:%M")])
     header_up = [""] * len(base_columns)
     for i in range(rconfig.DIFF_DAYS_COUNT, 0, -1):
         header_up += [f"{i} д. назад"] * 2
+    header_up += [""] * len(last_columns)
     data.append(header_up)
 
     header_down = []
     header_down += base_columns
     for i in range(rconfig.DIFF_DAYS_COUNT):
         header_down += ["Заказы", "Остатки"]
+    header_down += last_columns
     data.append(header_down)
 
     article_res = {}
@@ -232,7 +237,11 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
             for day_stat in stat.days_stats:
                 row.append(day_stat.sales_count)
                 row.append(day_stat.stocks_count)
+            row.append(stat.saleRate)
+            row.append(stat.availability)
+
             data.append(row)
+
     return data
 
 
