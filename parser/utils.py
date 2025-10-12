@@ -13,12 +13,12 @@ from .parser_exceptions import *
 class RequestTypes(Enum):
     GET = "GET"
     POST = "POST"
-    
+
+
 class ArticleData(BaseModel):
     article: int
     seller_article: str
     brand: str
-    
 
 
 def get_auth_header(token: str) -> dict:
@@ -26,8 +26,8 @@ def get_auth_header(token: str) -> dict:
     return header
 
 
-def _send_request(url: str, 
-                  headers: dict, 
+def _send_request(url: str,
+                  headers: dict,
                   attempts: int,
                   on_error_wait_sec: int,
                   mode: RequestTypes,
@@ -58,19 +58,20 @@ def _send_request(url: str,
             if resp and resp.status_code != 429:
                 logging.exception(err)
             time.sleep(on_error_wait_sec)
-    logging.error(f"Invalid request: url={url}" + f", status={resp.status_code}" if resp else "")
+    logging.error(
+        f"Invalid request: url={url}" + f", status={resp.status_code}" if resp else "")
     return None
 
 
 def api_get(url: str, headers: dict,
             attempts: int = REQUEST_ATTEMPT_COUNT,
-            req_wait_sec = REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
+            req_wait_sec=REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
     return _send_request(url, headers, attempts, req_wait_sec, RequestTypes.GET)
 
 
 def api_post(url: str, headers: dict, body: dict,
              attempts: int = REQUEST_ATTEMPT_COUNT,
-             req_wait_sec = REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
+             req_wait_sec=REQUEST_WAIT_SEC) -> Union[list[dict], dict]:
     return _send_request(url, headers, attempts, req_wait_sec, RequestTypes.POST, body)
 
 
@@ -103,12 +104,14 @@ def get_article_data() -> list[ArticleData]:
             article = int(row[0])
             seller_article = row[1]
             brand = row[2]
-            res.append(ArticleData(article=article, seller_article=seller_article, brand=brand))
+            res.append(ArticleData(article=article,
+                       seller_article=seller_article, brand=brand))
     except:
         pass
-    return res 
+    return res
 
-def get_wb_token() ->str:
+
+def get_wb_token() -> str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
     if not data:
         return None
@@ -116,4 +119,3 @@ def get_wb_token() ->str:
         return data[0][0].strip("\n, ")
     except:
         return None
-            

@@ -69,16 +69,19 @@ def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaS
                 article=card.get("nmID", 0),
                 seller_article=card.get("vendorCode", ""),
                 brand=card.get("brandName", ""),
-                stock_count=stocks.get("stocksMp", 0) + stocks.get("stocksWb", 0),
+                stock_count=stocks.get("stocksMp", 0) +
+                stocks.get("stocksWb", 0),
                 middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
-                buyout_percent=sel.get("conversions", {}).get("buyoutsPercent", 0.0),
+                buyout_percent=sel.get("conversions", {}).get(
+                    "buyoutsPercent", 0.0),
                 orders_count=sel.get("ordersCount", 0),
                 orders_sum=sel.get("ordersSumRub", 0.0),
                 lost_orders_count=sel.get("cancelCount", 0.0),
-                lost_orders_sum=sel.get("cancelSumRub", 0.0),   
+                lost_orders_sum=sel.get("cancelSumRub", 0.0),
                 card_opens=sel.get("openCardCount", 0),
                 to_cart=sel.get("addToCartCount", 0),
-                ctr=(sel.get("addToCartCount", 0) / sel.get("openCardCount", 1) if sel.get("openCardCount") else 0),
+                ctr=(sel.get("addToCartCount", 0) / sel.get("openCardCount", 1)
+                     if sel.get("openCardCount") else 0),
                 buyout_count=sel.get("buyoutsCount", 0),
                 buyout_sum=sel.get("buyoutsSumRub", 0.0),
                 returns_count=sel.get("cancelCount", 0),

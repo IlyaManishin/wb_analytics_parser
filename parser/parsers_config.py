@@ -2,19 +2,19 @@ import os
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
-#PORT = 8000
+# PORT = 8000
 
 REQUEST_ATTEMPT_COUNT = 3
 REQUEST_WAIT_SEC = 5
 
-#____SALES_STATS___
+# ____SALES_STATS___
 SALES_STATS_URL = "https://seller-analytics-api.wildberries.ru/api/v2/stocks-report/products/products"
 SALES_URL = "https://statistics-api.wildberries.ru/api/v1/supplier/sales"
 SALES_PERIOD_DAYS = 30
 DIFF_DAYS_COUNT = 10
 SALES_STATS_SHEET_NAME = "Продажи 10 дней"
 
-#____VORONKA_STATS____
+# ____VORONKA_STATS____
 VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
 
 
@@ -28,13 +28,14 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 security_folder = os.path.join(this_dir, "security_settings")
 creds_path = os.path.join(security_folder, "credentials.json")
 
-token_path =  os.path.join(security_folder, "table_id.txt")
+token_path = os.path.join(security_folder, "table_id.txt")
 table_id = ""
 with open(token_path, "r") as file:
     table_id = file.read().strip("\n, ")
 
 scope = ['https://spreadsheets.google.com/feeds',
-             'https://www.googleapis.com/auth/drive']
+         'https://www.googleapis.com/auth/drive']
 
-credentials = service_account.Credentials.from_service_account_file(creds_path, scopes=scope)
+credentials = service_account.Credentials.from_service_account_file(
+    creds_path, scopes=scope)
 service = build('sheets', 'v4', credentials=credentials)
