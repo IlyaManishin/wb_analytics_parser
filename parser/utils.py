@@ -43,6 +43,8 @@ def _send_request(url: str,
                     body = {}
                 resp = requests.post(url, headers=headers,
                                      json=body, timeout=on_error_wait_sec)
+            if resp.status_code != 200:
+                logging.error(f"Api error resp = {resp.text}")
             if resp.status_code == 401:
                 raise UnathorizedExc()
             if resp.status_code != 200:
@@ -104,7 +106,7 @@ def get_article_data() -> list[ArticleData]:
             res.append(ArticleData(article=article, seller_article=seller_article, brand=brand))
     except:
         pass
-    return res #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return res 
 
 def get_wb_token() ->str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)

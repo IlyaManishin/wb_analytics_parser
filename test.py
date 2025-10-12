@@ -4,6 +4,7 @@ from datetime import date, datetime
 from parser import period_sales
 from parser import utils
 from parser.data import db
+import config
 
 
 def token_read_test() -> bool:

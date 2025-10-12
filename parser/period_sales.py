@@ -61,12 +61,12 @@ def get_period_stats(token: str, articles: list[int], start: datetime, end: date
                 "mode": "asc"
             },
             "availabilityFilters": [
-                "deficient",
-                "actual",
-                "balanced",
-                "nonActual",
-                "nonLiquid",
-                "invalidData",
+                # "deficient",
+                # "actual",
+                # "balanced",
+                # "nonActual",
+                # "nonLiquid",
+                # "invalidData",
             ],
             "limit": limit,
             "offset": 0
@@ -81,8 +81,6 @@ def get_period_stats(token: str, articles: list[int], start: datetime, end: date
         if not items:
             break
         all_items += items
-        if len(items) < limit:
-            break
 
     return all_items
 

@@ -4,17 +4,6 @@ from datetime import datetime
 
 from tasks import register_tasks
 from parser import voronka_stats
-import logging
-
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[
-        logging.FileHandler("logger.log"),
-    ]
-)
 
 
 @asynccontextmanager
