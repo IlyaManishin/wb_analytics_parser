@@ -17,9 +17,8 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/voronka-stats", response_model=list[voronka_stats.VoronkaStat])
 def funnel_stats_handler(
-    token: str = Query(..., description="Токен авторизации WB"),
     start_date: datetime = Query(..., description="Начало периода"),
     end_date: datetime = Query(..., description="Конец периода"),
 ):
-    stats = voronka_stats.get_voronka_stats(token, start_date, end_date)
+    stats = voronka_stats.get_voronka_stats(start_date, end_date)
     return stats

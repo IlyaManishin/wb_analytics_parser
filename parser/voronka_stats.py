@@ -30,7 +30,8 @@ class VoronkaStat(BaseModel):
     deficit_days: Optional[int] = 0
 
 
-def get_voronka_stats(token: str, start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
+def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
+    token = utils.get_wb_token()
     headers = utils.get_auth_header(token)
 
     stats: List[VoronkaStat] = []
