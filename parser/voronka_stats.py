@@ -13,8 +13,6 @@ class VoronkaStat(BaseModel):
     brand: str
     stock_count: int
     middle_in_day_sales: float
-    turnover_days: Optional[int]
-    turnover_hours: Optional[int]
     buyout_percent: float
     orders_count: int
     orders_sum: float
@@ -27,7 +25,7 @@ class VoronkaStat(BaseModel):
     buyout_sum: float
     returns_count: int
     returns_sum: float
-    deficit_days: Optional[int] = 0
+    # deficit_days: Optional[int] = 0
 
 
 def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
@@ -54,6 +52,8 @@ def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaS
 
         result = utils.api_post(pconfig.VORONKA_URL,
                                 headers, body, req_wait_sec=WAIT_TIME)
+        if not result:
+            return
         time.sleep(WAIT_TIME)
 
         data = result.get("data", {})
@@ -62,29 +62,28 @@ def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaS
             break
 
         for card in cards:
-            selected = card.get("statistics", {}).get("selectedPeriod", {})
+            sel = card.get("statistics", {}).get("selectedPeriod", {})
             stocks = card.get("stocks", {})
 
             stat = VoronkaStat(
                 article=card.get("nmID", 0),
                 seller_article=card.get("vendorCode", ""),
                 brand=card.get("brandName", ""),
-                stock_count=(stocks.get("stocksMp", 0) +
-                             stocks.get("stocksWb", 0)),
-                middle_in_day_sales=selected.get("avgOrdersCountPerDay", 0.0),
-                turnover_days=None,
-                turnover_hours=None,
-                buyout_percent=selected.get(
-                    "conversions", {}).get("buyoutsPercent", 0.0),
-                orders_count=selected.get("ordersCount", 0),
-                orders_sum=selected.get("ordersSumRub", 0.0),
-                lost_orders_count=0,
-                lost_orders_sum=0,
-                buyout_count=selected.get("buyoutsCount", 0),
-                buyout_sum=selected.get("buyoutsSumRub", 0.0),
-                returns_count=selected.get("cancelCount", 0),
-                returns_sum=selected.get("cancelSumRub", 0.0),
-                deficit_days=0,
+                stock_count=stocks.get("stocksMp", 0) + stocks.get("stocksWb", 0),
+                middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
+                buyout_percent=sel.get("conversions", {}).get("buyoutsPercent", 0.0),
+                orders_count=sel.get("ordersCount", 0),
+                orders_sum=sel.get("ordersSumRub", 0.0),
+                lost_orders_count=sel.get("cancelCount", 0.0),
+                lost_orders_sum=sel.get("cancelSumRub", 0.0),   
+                card_opens=sel.get("openCardCount", 0),
+                to_cart=sel.get("addToCartCount", 0),
+                ctr=(sel.get("addToCartCount", 0) / sel.get("openCardCount", 1) if sel.get("openCardCount") else 0),
+                buyout_count=sel.get("buyoutsCount", 0),
+                buyout_sum=sel.get("buyoutsSumRub", 0.0),
+                returns_count=sel.get("cancelCount", 0),
+                returns_sum=sel.get("cancelSumRub", 0.0),
+                # deficit_days=sel.get("officeMissingTime", {}).get("days", 0)
             )
 
             stats.append(stat)
