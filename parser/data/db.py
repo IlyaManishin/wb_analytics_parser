@@ -6,9 +6,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 BASE_NAME = "table.db"
+TEST_NAME = "test.db"
 
 _sessionMaker = None
-
 
 class Base(DeclarativeBase):
     pass
@@ -32,8 +32,20 @@ def init_db(file_name: str = BASE_NAME):
     engine = create_engine(db_path, echo=False)
     _sessionMaker = sessionmaker(bind=engine)
     Base.metadata.create_all(engine)
+    
+def init_test_db():
+    global _is_test_db
+    init_db(TEST_NAME)
+    _is_test_db = True
 
-
+def delete_test_db():
+    global _sessionMaker, _is_test_db
+    
+    test_db_path = os.path.join(THIS_DIR, TEST_NAME)
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
+        _sessionMaker = None
+    
 def get_session():
     if not _sessionMaker:
         init_db()

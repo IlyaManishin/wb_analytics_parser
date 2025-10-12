@@ -120,7 +120,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
     month_data = {}
     for item in month_stats:
         article = item["nmID"]
-        metrics = item.get("metrics", [])
+        metrics = item.get("metrics", {})
 
         month_sales = metrics.get("ordersCount", 0)
         avg_sales = metrics.get("avgOrders", 0)
@@ -153,7 +153,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             if not metrics:
                 continue
             orders = metrics.get("ordersCount", 0)
-            
+            stocks = db.get_article_day_stocks(article, day.date()) or 0
             if article in article_daily_data:
                 article_daily_data[article][day.date()] = (orders, stocks)
 
