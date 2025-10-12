@@ -32,6 +32,9 @@ class SalesStat(BaseModel):
 
     days_stats: list[DayStats]
 
+    saleRate: int
+    availability: str
+
 
 class Sale(BaseModel):
     article: int
@@ -135,6 +138,8 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             middle_in_day_sales=avg_sales,
             month_income=period_income,
             no_available_days=not_available,
+            saleRate=metrics.get("saleRate", {}).get("days", 0),
+            availability=metrics.get("availability", "")
         )
     db.save_daily_stocks(today_stocks, datetime.now().date())
     
@@ -177,7 +182,9 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             middle_in_day_sales=mdata.get("middle_in_day_sales", 0.0),
             month_income=mdata.get("month_income", 0),
             no_available_days=mdata.get("no_available_days", 0),
-            days_stats=days_stats
+            days_stats=days_stats,
+            saleRate=mdata.get("saleRate", 0),
+            availability=mdata.get("availability", "")
         ))
 
     return sales_stats
