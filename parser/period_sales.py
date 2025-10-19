@@ -26,6 +26,7 @@ class SalesStat(BaseModel):
     seller_article: str
     brand: str
     month_sales: int
+    cur_stocks: int
     middle_in_day_sales: float
     month_income: int
     no_available_days: int
@@ -162,21 +163,22 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
 
     sales_stats = []
     for art_data in articles_data:
-        art = art_data.article
-        mdata = month_data.get(art, {})
+        article = art_data.article
+        mdata = month_data.get(article, {})
 
         days_stats = []
         for day in date_range:
             sales_count, stocks_count = article_daily_data.get(
-                art, {}).get(day.date(), (0, 0))
+                article, {}).get(day.date(), (0, 0))
             days_stats.append(
                 DayStats(sales_count=sales_count, stocks_count=stocks_count))
 
         sales_stats.append(SalesStat(
-            article=art,
+            article=article,
             seller_article=art_data.seller_article,
             brand=art_data.brand,
             month_sales=mdata.get("month_sales", 0),
+            cur_stocks=today_stocks.get(article, 0),
             middle_in_day_sales=mdata.get("middle_in_day_sales", 0.0),
             month_income=mdata.get("month_income", 0),
             no_available_days=mdata.get("no_available_days", 0),
