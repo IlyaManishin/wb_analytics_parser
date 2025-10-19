@@ -194,7 +194,7 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
                                  articles_data: list[utils.ArticleData],
                                  stats: list[SalesStat]) -> list[list]:
     base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
-                    "Среднее количество заказов в день", "Выручка за 30 дней (руб)",
+                    "Остаток", "Среднее количество заказов в день", "Выручка за 30 дней (руб)",
                     "Товара нет в наличии (дней)"]
     last_columns = ["Оборачиваемость", "Доступность"]
 
@@ -230,6 +230,7 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
             row.append(stat.seller_article)
             row.append(stat.brand)
             row.append(stat.month_sales)
+            row.append(stat.cur_stocks)
             row.append(stat.middle_in_day_sales)
             row.append(stat.month_income)
             row.append(stat.no_available_days)
