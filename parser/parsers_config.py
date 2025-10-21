@@ -17,6 +17,9 @@ SALES_STATS_SHEET_NAME = "Продажи 10 дней"
 # ____VORONKA_STATS____
 VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
 
+# ____STOCKS_STATS____
+OFFICES_URL = "https://marketplace-api.wildberries.ru/api/v3/offices"
+
 
 PROFITABILITY_ARTICLES_RANGE = "A12:C"
 PROFITABILITY_SHEET_NAME = "Рентабельность"

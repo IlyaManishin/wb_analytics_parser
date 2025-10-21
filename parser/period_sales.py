@@ -298,6 +298,3 @@ def _period_sales_task_internal(rconfig: _RunConfig):
 def period_sales_task():
     rconfig = _RunConfig(pconfig.DIFF_DAYS_COUNT, False)
     _period_sales_task_internal(rconfig)
-    # with open("res.json", "w", encoding="utf-8") as file:
-    #     dump_data = [i.model_dump() for i in res]
-    #     file.write(json.dumps(dump_data, ensure_ascii=False))
