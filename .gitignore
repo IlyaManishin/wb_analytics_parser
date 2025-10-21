@@ -6,3 +6,5 @@
 **/*.json
 **/*.log
 **/*.db
+
+check.py

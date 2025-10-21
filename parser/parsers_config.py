@@ -20,6 +20,11 @@ VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/deta
 # ____STOCKS_STATS____
 OFFICES_URL = "https://marketplace-api.wildberries.ru/api/v3/offices"
 
+WB_WAREHOUSE_REMAINS_URL = "https://seller-analytics-api.wildberries.ru/api/v1/warehouse_remains"
+WB_WAREHOUSE_STATUS_URL = "https://seller-analytics-api.wildberries.ru/api/v1/warehouse_remains/tasks/{task_id}/status"
+WB_WAREHOUSE_DOWNLOAD_URL = "https://seller-analytics-api.wildberries.ru/api/v1/warehouse_remains/tasks/{task_id}/download"
+WB_STATUS_ATTEMPTS = 30
+
 
 PROFITABILITY_ARTICLES_RANGE = "A12:C"
 PROFITABILITY_SHEET_NAME = "Рентабельность"

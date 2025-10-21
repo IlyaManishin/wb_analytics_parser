@@ -1,6 +1,8 @@
 import time
 from typing import List, Dict
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
+import logging
 
 from . import utils
 from . import parsers_config as pconfig
@@ -27,31 +29,39 @@ class StockStat(BaseModel):
     city_stats: List[CityStat]
 
 
-def get_stocks_stub():
-    """Заглушка для метода получения остатков товаров"""
-    return [
-        {
-            "brand": "Wonderful",
-            "subjectName": "Фотоальбомы",
-            "vendorCode": "41058/прозрачный",
-            "nmId": 183804172,
-            "warehouses": [
-                {"warehouseName": "Невинномысск", "quantity": 134},
-                {"warehouseName": "Коледино", "quantity": 133},
-                {"warehouseName": "В пути до получателей", "quantity": 14},
-            ],
-        },
-        {
-            "brand": "Neuro",
-            "subjectName": "Блокноты",
-            "vendorCode": "AB-2025",
-            "nmId": 193456789,
-            "warehouses": [
-                {"warehouseName": "Коледино", "quantity": 72},
-                {"warehouseName": "Казань", "quantity": 48},
-            ],
-        },
-    ]
+def get_stocks_report() -> Optional[Dict[str, Any]]:
+    token = utils.get_wb_token()
+    if not token:
+        logging.error("Can't get token")
+        return None
+
+    headers = utils.get_auth_header(token)
+    group_by = "groupByNm=true&groupByBrand=true&groupBySubject=true&groupBySa=true&groupBySize=true"
+    create_report_url = f"{pconfig.WB_WAREHOUSE_REMAINS_URL}?{group_by}"
+    create_resp = utils.api_get(create_report_url, headers)
+    task_id = create_resp.get("data", {}).get("taskId")
+    if not task_id:
+        logging.error("Can't get warehouse task")
+        return None
+
+    status_url = pconfig.WB_WAREHOUSE_STATUS_URL.format(task_id=task_id)
+    bad_statuses = {"purged", "canceled"}
+
+    for _ in range(pconfig.WB_STATUS_ATTEMPTS):
+        status_resp = utils.api_get(status_url, headers)
+        status = status_resp.get("data", {}).get("status")
+        if not status or status in bad_statuses:
+            logging.error("Invalid status from warehouses report")
+            return None
+        if status == "done":
+            break
+        time.sleep(5)
+    else:
+        return None
+
+    download_url = pconfig.WB_WAREHOUSE_DOWNLOAD_URL.format(task_id=task_id)
+    report_data = utils.api_get(download_url, headers)
+    return report_data
 
 
 def get_warehouse_map(token: str) -> Dict[str, Dict[str, str]]:
@@ -74,7 +84,7 @@ def get_stock_stats() -> List[StockStat]:
     token = utils.get_wb_token()
     warehouse_map = get_warehouse_map(token)
 
-    stocks_data = get_stocks_stub()
+    stocks_data = get_stocks_report()
     if not stocks_data:
         return []
 
