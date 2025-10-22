@@ -68,7 +68,7 @@ def get_warehouse_map(token: str) -> Dict[str, Dict[str, str]]:
     headers = utils.get_auth_header(token)
     offices = utils.api_get(pconfig.OFFICES_URL, headers)
     if not offices:
-        return []
+        return None
 
     warehouse_map: Dict[str, Dict[str, str]] = {}
     for off in offices:
@@ -76,13 +76,17 @@ def get_warehouse_map(token: str) -> Dict[str, Dict[str, str]]:
         if not name:
             continue
         region = off.get("federalDistrict") or "Остальные"
-        city = off.get("city") or "Неизвестно"
+        city = off.get("city") or "Остальные"
         warehouse_map[name] = {"region": region, "city": city}
+    warehouse_map["В пути возвраты на склад WB"] = {"region": "Остальные", "city": "Остальные"}
+    return warehouse_map
 
 
 def get_stock_stats() -> List[StockStat]:
     token = utils.get_wb_token()
     warehouse_map = get_warehouse_map(token)
+    if not warehouse_map:
+        logging.error("Can't get warehouse map")
 
     stocks_data = get_stocks_report()
     if not stocks_data:
@@ -109,6 +113,9 @@ def get_stock_stats() -> List[StockStat]:
 
         for wh in warehouses:
             wh_name = wh.get("warehouseName")
+            if wh_name in ("В пути до получателей", "Всего находится на складах"):
+                continue
+            
             qty = wh.get("quantity", 0)
             if not wh_name or qty <= 0:
                 continue
