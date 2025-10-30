@@ -1,10 +1,8 @@
-import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
-from parser import period_sales
+from parser import period_sales, region_sales
 from parser import utils
 from parser.data import db
-import config
 
 
 def token_read_test() -> bool:
@@ -33,6 +31,31 @@ def sales_stats_test() -> bool:
     stats = period_sales.read_sales_stats(token, config, articles_data)
     if not stats:
         print("Sale stats error")
+        return False
+    return True
+
+def region_sales_test() -> bool:
+    token = utils.get_wb_token()
+    if not token:
+        print("Region sales test failed: can't read token")
+        return False
+
+    articles_data = utils.get_article_data()
+    if not articles_data:
+        print("Region sales test failed: no article data")
+        return False
+
+    end_date = datetime.today()
+    start_date = end_date - timedelta(days=7)
+
+    stats = region_sales.get_region_sales(start_date, end_date)
+    if not stats:
+        print("Region sales test failed: no stats returned")
+        return False
+
+    sample = stats[0]
+    if not isinstance(sample.article, int) or not sample.city_name:
+        print("Region sales test failed: invalid data structure")
         return False
     return True
 
@@ -66,7 +89,8 @@ def run_tests():
         token_read_test,
         articles_data_test,
         sales_stats_test,
-        db_tests
+        db_tests,
+        region_sales_test
     ]
     results = [test() for test in tests]
     if all(results):
@@ -75,7 +99,6 @@ def run_tests():
 
 def main():
     run_tests()
-    # period_sales.period_sales_task()
 
 
 if __name__ == "__main__":

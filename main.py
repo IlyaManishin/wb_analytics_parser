@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 from tasks import register_tasks
-from parser import voronka_stats
+from parser import voronka_stats, region_sales
 
 
 @asynccontextmanager
@@ -16,9 +16,17 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/voronka-stats", response_model=list[voronka_stats.VoronkaStat])
-def funnel_stats_handler(
+def voronka_stats_handler(
     start_date: datetime = Query(..., description="Начало периода"),
     end_date: datetime = Query(..., description="Конец периода"),
 ):
     stats = voronka_stats.get_voronka_stats(start_date, end_date)
+    return stats
+
+@app.get("/region-sales", response_model=list[region_sales.RegionSale])
+def region_stats_handler(
+    start_date: datetime = Query(..., description="Начало периода"),
+    end_date: datetime = Query(..., description="Конец периода"),
+):
+    stats = region_sales.get_region_sales(start_date, end_date)
     return stats
