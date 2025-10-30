@@ -8,6 +8,7 @@ from . import parsers_config as pconfig
 
 WAIT_TIME = 10
 
+
 class RegionSale(BaseModel):
     article: int
     seller_article: str
@@ -25,7 +26,7 @@ def get_region_sales(start_date: datetime, end_date: datetime) -> List[RegionSal
     token = utils.get_wb_token()
     headers = utils.get_auth_header(token)
 
-    dates_postfix = f"dateFrom={start_date.strftime(r"%Y-%m-%d")}&dateTo={end_date.strftime(r"%Y-%m-%d")}"
+    dates_postfix = f'dateFrom={start_date.strftime(r"%Y-%m-%d")}&dateTo={end_date.strftime(r"%Y-%m-%d")}'
     report_url = f"{pconfig.REGION_SALE_URL}?{dates_postfix}"
     result = utils.api_get(report_url, headers, req_wait_sec=WAIT_TIME)
     if not result:
