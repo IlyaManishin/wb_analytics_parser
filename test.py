@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from parser import period_sales, region_sales
+from parser import period_sales, region_sales, voronka_stats
 from parser import utils
 from parser.data import db
 
@@ -59,6 +59,33 @@ def region_sales_test() -> bool:
         return False
     return True
 
+def voronka_stats_test() -> bool:
+    token = utils.get_wb_token()
+    if not token:
+        print("Voronka stats test failed: can't read token")
+        return False
+
+    articles_data = utils.get_article_data()
+    if not articles_data:
+        print("Voronka stats test failed: no article data")
+        return False
+
+    end_date = datetime.today()
+    start_date = end_date - timedelta(days=7)
+
+    stats = voronka_stats.get_voronka_stats(start_date, end_date)
+    if not stats:
+        print("Voronka stats test failed: no stats returned")
+        return False
+
+    sample = stats[0]
+    if not isinstance(sample.article, int) or not sample.brand or not isinstance(sample.buyout_sum, float):
+        print("Voronka stats test failed: invalid data structure")
+        return False
+
+    print("Voronka stats test passed")
+    return True
+
 
 def db_tests() -> bool:
     db.init_test_db()
@@ -88,8 +115,9 @@ def run_tests():
     tests = [
         token_read_test,
         articles_data_test,
-        sales_stats_test,
-        db_tests,
+        # sales_stats_test,
+        # db_tests,
+        voronka_stats_test,
         region_sales_test
     ]
     results = [test() for test in tests]

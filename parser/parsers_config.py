@@ -28,7 +28,7 @@ WB_STATUS_ATTEMPTS = 30
 # ____STOCKS_STATS____
 REGION_SALE_URL = "https://seller-analytics-api.wildberries.ru/api/v1/analytics/region-sale"
 
-PROFITABILITY_ARTICLES_RANGE = "A12:C"
+PROFITABILITY_ARTICLES_RANGE = "A12:D"
 PROFITABILITY_SHEET_NAME = "Рентабельность"
 
 TOKEN_SHEET_NAME = "Токен"

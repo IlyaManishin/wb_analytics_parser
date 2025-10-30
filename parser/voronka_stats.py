@@ -11,6 +11,7 @@ class VoronkaStat(BaseModel):
     article: int
     seller_article: str
     brand: str
+    category: str
     stock_count: int
     middle_in_day_sales: float
     buyout_percent: float
@@ -69,8 +70,8 @@ def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaS
                 article=card.get("nmID", 0),
                 seller_article=card.get("vendorCode", ""),
                 brand=card.get("brandName", ""),
-                stock_count=stocks.get("stocksMp", 0) +
-                stocks.get("stocksWb", 0),
+                category=card.get("subjectName", ""),
+                stock_count=stocks.get("stocksMp", 0) + stocks.get("stocksWb", 0),
                 middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
                 buyout_percent=sel.get("conversions", {}).get(
                     "buyoutsPercent", 0.0),

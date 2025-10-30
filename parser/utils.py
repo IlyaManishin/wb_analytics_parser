@@ -19,6 +19,7 @@ class ArticleData(BaseModel):
     article: int
     seller_article: str
     brand: str
+    category: str
 
 
 def get_auth_header(token: str) -> dict:
@@ -99,13 +100,17 @@ def get_article_data() -> list[ArticleData]:
     res = []
     try:
         for row in data:
-            if len(row) < 3:
+            if len(row) < 4:
                 continue
             article = int(row[0])
             seller_article = row[1]
             brand = row[2]
-            res.append(ArticleData(article=article,
-                       seller_article=seller_article, brand=brand))
+            category = row[3]
+            res.append(ArticleData(
+                article=article,
+                seller_article=seller_article, 
+                brand=brand,
+                category=category))
     except:
         pass
     return res
