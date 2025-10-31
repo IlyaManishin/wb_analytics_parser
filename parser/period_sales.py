@@ -25,6 +25,7 @@ class SalesStat(BaseModel):
     article: int
     seller_article: str
     brand: str
+    category: str
     month_sales: int
     cur_stocks: int
     middle_in_day_sales: float
@@ -177,6 +178,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
             article=article,
             seller_article=art_data.seller_article,
             brand=art_data.brand,
+            category=art_data.category,
             month_sales=mdata.get("month_sales", 0),
             cur_stocks=today_stocks.get(article, 0),
             middle_in_day_sales=mdata.get("middle_in_day_sales", 0.0),
@@ -193,9 +195,9 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
 def convert_sales_stats_to_table(rconfig: _RunConfig,
                                  articles_data: list[utils.ArticleData],
                                  stats: list[SalesStat]) -> list[list]:
-    base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Всего продаж за месяц",
-                    "Остаток", "Среднее количество заказов в день", "Выручка за 30 дней (руб)",
-                    "Товара нет в наличии (дней)"]
+    base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Категория"
+                    "Всего продаж за месяц", "Остаток", "Среднее количество заказов в день",
+                    "Выручка за 30 дней (руб)", "Товара нет в наличии (дней)"]
     last_columns = ["Оборачиваемость", "Доступность"]
 
     data = []
@@ -229,6 +231,7 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
             row.append(stat.article)
             row.append(stat.seller_article)
             row.append(stat.brand)
+            row.append(stat.category)
             row.append(stat.month_sales)
             row.append(stat.cur_stocks)
             row.append(stat.middle_in_day_sales)

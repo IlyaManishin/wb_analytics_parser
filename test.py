@@ -21,7 +21,7 @@ def articles_data_test() -> bool:
     return True
 
 
-def sales_stats_test() -> bool:
+def period_sales_test() -> bool:
     articles_data = utils.get_article_data()
     token = utils.get_wb_token()
     if not articles_data or not token:
@@ -113,12 +113,12 @@ def db_tests() -> bool:
 
 def run_tests():
     tests = [
-        token_read_test,
-        articles_data_test,
-        # sales_stats_test,
-        # db_tests,
-        voronka_stats_test,
-        region_sales_test
+        # token_read_test,
+        # articles_data_test,
+        period_sales_test,
+        # # db_tests,
+        # voronka_stats_test,
+        # region_sales_test
     ]
     results = [test() for test in tests]
     if all(results):
