@@ -195,7 +195,7 @@ def read_sales_stats(token, config: _RunConfig,  articles_data: list[utils.Artic
 def convert_sales_stats_to_table(rconfig: _RunConfig,
                                  articles_data: list[utils.ArticleData],
                                  stats: list[SalesStat]) -> list[list]:
-    base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Категория"
+    base_columns = ["Артикул WB", "Артикул поставщика", "Бренд", "Категория",
                     "Всего продаж за месяц", "Остаток", "Среднее количество заказов в день",
                     "Выручка за 30 дней (руб)", "Товара нет в наличии (дней)"]
     last_columns = ["Оборачиваемость", "Доступность"]
