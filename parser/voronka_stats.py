@@ -29,8 +29,8 @@ class VoronkaStat(BaseModel):
     # deficit_days: Optional[int] = 0
 
 
-def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
-    token = utils.get_wb_token()
+def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
+    token = utils.get_wb_token(spreadsheets_id)
     headers = utils.get_auth_header(token)
 
     stats: List[VoronkaStat] = []
@@ -71,7 +71,8 @@ def get_voronka_stats(start_date: datetime, end_date: datetime) -> List[VoronkaS
                 seller_article=card.get("vendorCode", ""),
                 brand=card.get("brandName", ""),
                 category=card.get("object", {}).get("name", ""),
-                stock_count=stocks.get("stocksMp", 0) + stocks.get("stocksWb", 0),
+                stock_count=stocks.get("stocksMp", 0) +
+                stocks.get("stocksWb", 0),
                 middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
                 buyout_percent=sel.get("conversions", {}).get(
                     "buyoutsPercent", 0.0),

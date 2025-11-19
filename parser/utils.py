@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Union
 import logging
 from pydantic import BaseModel
+import os
 
 from .parsers_config import *
 from .parser_exceptions import *
@@ -85,14 +86,14 @@ def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
                                                          range=f"{name}!{table_range}").execute()["values"]
             break
         except Exception as err:
-            logging.error(err)
+            logging.exception(err)
             continue
     if not values:
         return []
     return values
 
 
-def get_article_data() -> list[ArticleData]:
+def get_article_data(table_id: str) -> list[ArticleData]:
     data = read_table(table_id, PROFITABILITY_SHEET_NAME,
                       PROFITABILITY_ARTICLES_RANGE)
     if not data:
@@ -116,7 +117,7 @@ def get_article_data() -> list[ArticleData]:
     return res
 
 
-def get_wb_token() -> str:
+def get_wb_token(table_id: str) -> str:
     data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
     if not data:
         return None
@@ -124,3 +125,12 @@ def get_wb_token() -> str:
         return data[0][0].strip("\n, ")
     except:
         return None
+
+def get_spreadsheets_ids():
+    ids_path = os.path.join(PARSER_DIR, "security_settings", "voronka_spreadsheets_id.txt")
+    with open(ids_path, 'r', encoding='utf-8') as file:
+        content = file.read().strip()
+        if not content:
+            return []
+        ids = [id.strip() for id in content.split(',') if id.strip()]
+        return ids

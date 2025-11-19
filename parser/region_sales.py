@@ -22,8 +22,8 @@ class RegionSale(BaseModel):
     sale_item_invoice_qty: int
 
 
-def get_region_sales(start_date: datetime, end_date: datetime) -> List[RegionSale]:
-    token = utils.get_wb_token()
+def get_region_sales(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[RegionSale]:
+    token = utils.get_wb_token(spreadsheets_id)
     headers = utils.get_auth_header(token)
 
     dates_postfix = f'dateFrom={start_date.strftime(r"%Y-%m-%d")}&dateTo={end_date.strftime(r"%Y-%m-%d")}'

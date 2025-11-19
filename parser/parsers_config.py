@@ -34,14 +34,11 @@ PROFITABILITY_SHEET_NAME = "Рентабельность"
 TOKEN_SHEET_NAME = "Токен"
 TOKEN_RANGE = "A1:A1"
 
-this_dir = os.path.dirname(os.path.realpath(__file__))
-security_folder = os.path.join(this_dir, "security_settings")
+PARSER_DIR = os.path.dirname(os.path.realpath(__file__))
+security_folder = os.path.join(PARSER_DIR, "security_settings")
 creds_path = os.path.join(security_folder, "credentials.json")
 
 token_path = os.path.join(security_folder, "table_id.txt")
-table_id = ""
-with open(token_path, "r") as file:
-    table_id = file.read().strip("\n, ")
 
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']

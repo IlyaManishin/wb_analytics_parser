@@ -3,15 +3,17 @@ from datetime import datetime, timedelta, date
 from pydantic import BaseModel
 import time
 from dataclasses import dataclass
+import os
 
 from . import parsers_config as pconfig
-from .parsers_config import service
+from .parsers_config import service, PARSER_DIR
 from . import utils
 from .data import db
 
 
 @dataclass
 class _RunConfig:
+    SPREADSHEETS_ID: str
     DIFF_DAYS_COUNT: int
     IS_DEBUG: bool
 
@@ -249,7 +251,7 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
     return data
 
 
-def save_sales_stats_to_sheet(data: list[list]):
+def save_sales_stats_to_sheet(spreadsheet_id: str, data: list[list]):
     spreadsheet_id = pconfig.table_id
     sheet_name = pconfig.SALES_STATS_SHEET_NAME
     range_name = f"{pconfig.SALES_STATS_SHEET_NAME}!A:ZZ"
@@ -299,5 +301,7 @@ def _period_sales_task_internal(rconfig: _RunConfig):
 
 
 def period_sales_task():
-    rconfig = _RunConfig(pconfig.DIFF_DAYS_COUNT, False)
-    _period_sales_task_internal(rconfig)
+    spreadsheets_ids = utils.get_spreadsheets_ids()
+    for spreadsheet_id in spreadsheets_ids:
+        rconfig = _RunConfig(spreadsheet_id, pconfig.DIFF_DAYS_COUNT, False)
+        _period_sales_task_internal(rconfig)
