@@ -3,10 +3,9 @@ from datetime import datetime, timedelta, date
 from pydantic import BaseModel
 import time
 from dataclasses import dataclass
-import os
 
 from . import parsers_config as pconfig
-from .parsers_config import service, PARSER_DIR
+from .parsers_config import service
 from . import utils
 from .data import db
 
@@ -252,7 +251,6 @@ def convert_sales_stats_to_table(rconfig: _RunConfig,
 
 
 def save_sales_stats_to_sheet(spreadsheet_id: str, data: list[list]):
-    spreadsheet_id = pconfig.table_id
     sheet_name = pconfig.SALES_STATS_SHEET_NAME
     range_name = f"{pconfig.SALES_STATS_SHEET_NAME}!A:ZZ"
     body = {
@@ -297,7 +295,7 @@ def _period_sales_task_internal(rconfig: _RunConfig):
         logging.error("Can't get stats")
         return
     google_data = convert_sales_stats_to_table(rconfig, articles_data, stats)
-    save_sales_stats_to_sheet(google_data)
+    save_sales_stats_to_sheet(rconfig.SPREADSHEETS_ID, google_data)
 
 
 def period_sales_task():

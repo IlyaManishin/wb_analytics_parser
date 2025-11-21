@@ -37,7 +37,7 @@ def get_region_sales(spreadsheets_id: str, start_date: datetime, end_date: datet
     if not report:
         return []
 
-    article_data_list = utils.get_article_data()
+    article_data_list = utils.get_article_data(spreadsheets_id)
     article_data_map = {
         a.article: a for a in article_data_list} if article_data_list else {}
 

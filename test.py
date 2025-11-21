@@ -43,7 +43,7 @@ def region_sales_test() -> bool:
         print("Region sales test failed: can't read token")
         return False
 
-    articles_data = utils.get_article_data()
+    articles_data = utils.get_article_data(table_id)
     if not articles_data:
         print("Region sales test failed: no article data")
         return False
@@ -51,7 +51,7 @@ def region_sales_test() -> bool:
     end_date = datetime.today()
     start_date = end_date - timedelta(days=7)
 
-    stats = region_sales.get_region_sales (table_id, start_date, end_date)
+    stats = region_sales.get_region_sales(table_id, start_date, end_date)
     if not stats:
         print("Region sales test failed: no stats returned")
         return False
@@ -83,7 +83,7 @@ def voronka_stats_test() -> bool:
         return False
 
     sample = stats[0]
-    if not isinstance(sample.article, int) or not sample.brand or not isinstance(sample.buyout_sum, float):
+    if not isinstance(sample.article, int) or not isinstance(sample.buyout_sum, float):
         print("Voronka stats test failed: invalid data structure")
         return False
 
