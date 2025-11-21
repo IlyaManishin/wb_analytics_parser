@@ -21,7 +21,7 @@ def voronka_stats_handler(
     start_date: datetime = Query(..., description="Начало периода"),
     end_date: datetime = Query(..., description="Конец периода"),
 ):
-    stats = voronka_stats.get_voronka_stats(start_date, end_date)
+    stats = voronka_stats.get_voronka_stats(spreadsheets_id, start_date, end_date)
     return stats
 
 
