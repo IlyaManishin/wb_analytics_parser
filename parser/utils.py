@@ -46,7 +46,7 @@ def _send_request(url: str,
                 resp = requests.post(url, headers=headers,
                                      json=body, timeout=on_error_wait_sec)
             if resp.status_code != 200:
-                logging.error(f"Api error resp = {resp.text}")
+                logging.error(f"Api error (status={resp.status_code}) resp = {resp.text}, url = {url}")
             if resp.status_code == 401:
                 raise UnathorizedExc()
             if resp.status_code != 200:
