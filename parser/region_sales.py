@@ -62,9 +62,3 @@ def get_region_sales(spreadsheets_id: str, start_date: datetime, end_date: datet
         stats.append(stat)
 
     return stats
-
-
-start = datetime(datetime.now().year, 1, 1)
-end = datetime.now()
-
-result = get_region_sales("1RFIE1gYw8Z4DoSqpBvrR5pwkrCrcoIulbD_jfo4-wnM", start, end)
