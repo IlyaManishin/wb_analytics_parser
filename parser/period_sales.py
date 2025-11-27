@@ -281,11 +281,11 @@ def save_sales_stats_to_sheet(spreadsheet_id: str, data: list[list]):
 
 
 def _period_sales_task_internal(rconfig: _RunConfig):
-    articles_data = utils.get_article_data()
+    articles_data = utils.get_article_data(rconfig.SPREADSHEETS_ID)
     if not articles_data:
         logging.error("No profitability articles")
         return
-    token = utils.get_wb_token()
+    token = utils.get_wb_token(rconfig.SPREADSHEETS_ID)
     if not token:
         logging.error("No wb token")
         return
