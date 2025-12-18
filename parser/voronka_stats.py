@@ -47,7 +47,7 @@ def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: date
                 "end": end_date.strftime(r"%Y-%m-%d"),
             },
             "orderBy": {
-                "field": "ordersSumRub",
+                "field": "orderSum",
                 "mode": "asc"
             },
             "limit" : LIMIT,
