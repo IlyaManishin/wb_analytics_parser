@@ -42,9 +42,9 @@ def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: date
     for i in range(MAX_PAGES):
         body = {
             "timezone": "Europe/Moscow",
-            "period": {
-                "begin": start_date.strftime(r"%Y-%m-%d 00:00:00"),
-                "end": end_date.strftime(r"%Y-%m-%d 23:59:00"),
+            "selectedPeriod": {
+                "start": start_date.strftime(r"%Y-%m-%d"),
+                "end": end_date.strftime(r"%Y-%m-%d"),
             },
             "orderBy": {
                 "field": "ordersSumRub",
