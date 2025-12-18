@@ -15,7 +15,7 @@ DIFF_DAYS_COUNT = 10
 SALES_STATS_SHEET_NAME = "Продажи 10 дней"
 
 # ____VORONKA_STATS____
-VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/v2/nm-report/detail"
+VORONKA_URL = "https://seller-analytics-api.wildberries.ru/api/analytics/v3/sales-funnel/products"
 
 # ____STOCKS_STATS____
 OFFICES_URL = "https://marketplace-api.wildberries.ru/api/v3/offices"
@@ -25,7 +25,7 @@ WB_WAREHOUSE_STATUS_URL = "https://seller-analytics-api.wildberries.ru/api/v1/wa
 WB_WAREHOUSE_DOWNLOAD_URL = "https://seller-analytics-api.wildberries.ru/api/v1/warehouse_remains/tasks/{task_id}/download"
 WB_STATUS_ATTEMPTS = 30
 
-# ____STOCKS_STATS____
+# ____REGION_STATS____
 REGION_SALE_URL = "https://seller-analytics-api.wildberries.ru/api/v1/analytics/region-sale"
 
 PROFITABILITY_ARTICLES_RANGE = "A12:D"
@@ -33,6 +33,7 @@ PROFITABILITY_SHEET_NAME = "Рентабельность"
 
 TOKEN_SHEET_NAME = "Токен"
 TOKEN_RANGE = "A1:A1"
+
 
 PARSER_DIR = os.path.dirname(os.path.realpath(__file__))
 security_folder = os.path.join(PARSER_DIR, "security_settings")
