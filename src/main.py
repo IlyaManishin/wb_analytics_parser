@@ -8,7 +8,6 @@ from parser import voronka_stats, region_sales
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     register_tasks()
     yield
 
