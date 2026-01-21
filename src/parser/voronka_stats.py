@@ -163,7 +163,7 @@ def get_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod) -> List[V
 
 def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, past: models.WbPeriod):
     wb_token = utils.get_wb_token(spreadsheets_id)
-    cards = get_voronka_data(wb_token, selected_period=selected)
+    cards = get_voronka_data(wb_token, selected_period=selected, past_period=past)
     if not cards:
         return []
 

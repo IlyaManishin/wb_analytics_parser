@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, Query, Body
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -9,7 +10,7 @@ from parser import models as p_models
 
 class AdvancedPeriodBody(p_models.BaseModel):
     selected: p_models.WbPeriod
-    past: p_models.WbPeriod
+    past: Optional[p_models.WbPeriod] = None
 
 
 @asynccontextmanager
