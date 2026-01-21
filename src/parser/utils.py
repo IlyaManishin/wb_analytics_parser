@@ -46,7 +46,8 @@ def _send_request(url: str,
                 resp = requests.post(url, headers=headers,
                                      json=body, timeout=on_error_wait_sec)
             if resp.status_code != 200:
-                logging.error(f"Api error (status={resp.status_code}) resp = {resp.text}, url = {url}")
+                logging.error(
+                    f"Api error (status={resp.status_code}) resp = {resp.text}, url = {url}")
             if resp.status_code == 401:
                 raise UnathorizedExc()
             if resp.status_code != 200:
@@ -109,7 +110,7 @@ def get_article_data(table_id: str) -> list[ArticleData]:
             category = row[3]
             res.append(ArticleData(
                 article=article,
-                seller_article=seller_article, 
+                seller_article=seller_article,
                 brand=brand,
                 category=category))
     except:
@@ -126,8 +127,10 @@ def get_wb_token(table_id: str) -> str:
     except:
         return None
 
+
 def get_spreadsheets_ids():
-    ids_path = os.path.join(PARSER_DIR, "security_settings", "voronka_spreadsheets_id.txt")
+    ids_path = os.path.join(PARSER_DIR, "security_settings",
+                            "voronka_spreadsheets_id.txt")
     with open(ids_path, 'r', encoding='utf-8') as file:
         content = file.read().strip()
         if not content:

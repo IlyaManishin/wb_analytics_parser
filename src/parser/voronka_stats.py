@@ -1,10 +1,12 @@
 import time
-from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 
 from . import utils
+from . import models
 from . import parsers_config as pconfig
+
+WAIT_TIME = 20
 
 
 class VoronkaStat(BaseModel):
@@ -29,19 +31,18 @@ class VoronkaStat(BaseModel):
     # deficit_days: Optional[int] = 0
 
 
-def get_voronka_data(wb_token: str, selected_period: dict, past_period: dict = None) -> list[dict]:
+def get_voronka_data(wb_token: str,
+                     selected_period: models.WbPeriod, past_period: models.WbPeriod = None) -> list[dict]:
     headers = utils.get_auth_header(wb_token)
     all_cards = []
 
     MAX_PAGES = 30
     LIMIT = 1000
-    WAIT_TIME = 20
     offset = 0
     for i in range(MAX_PAGES):
         body = {
             "timezone": "Europe/Moscow",
-            "selectedPeriod": selected_period,
-            "pastPeriod": past_period or {},
+            "selectedPeriod": selected_period.to_dict(),
             "orderBy": {
                 "field": "orderSum",
                 "mode": "asc"
@@ -49,6 +50,8 @@ def get_voronka_data(wb_token: str, selected_period: dict, past_period: dict = N
             "limit": LIMIT,
             "offset": offset
         }
+        if past_period:
+            body["pastPeriod"] = past_period.to_dict()
 
         result = utils.api_post(pconfig.VORONKA_URL,
                                 headers, body, req_wait_sec=WAIT_TIME)
@@ -69,13 +72,10 @@ def get_voronka_data(wb_token: str, selected_period: dict, past_period: dict = N
     return all_cards
 
 
-def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
+def get_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod) -> List[VoronkaStat]:
     wb_token = utils.get_wb_token(spreadsheets_id)
-    selected_period = {"start": start_date.strftime(r"%Y-%m-%d"),
-                       "end": end_date.strftime(r"%Y-%m-%d")}
-
     stats: List[VoronkaStat] = []
-    cards = get_voronka_data(wb_token, selected_period=selected_period)
+    cards = get_voronka_data(wb_token, selected_period=selected)
     if not cards:
         return []
 
@@ -112,3 +112,7 @@ def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: date
         stats.append(stat_obj)
 
     return stats
+
+
+def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, past: models.WbPeriod):
+    pass

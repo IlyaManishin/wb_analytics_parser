@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 
 from parser import period_sales, region_sales, voronka_stats
-from parser import utils
+from parser import utils, models
 from parser.data import db
 
 table_id = utils.get_spreadsheets_ids()[0]
@@ -50,8 +50,9 @@ def region_sales_test() -> bool:
 
     end_date = datetime.today()
     start_date = end_date - timedelta(days=7)
+    period = models.WbPeriod(start=start_date, end=end_date)
 
-    stats = region_sales.get_region_sales(table_id, start_date, end_date)
+    stats = region_sales.get_region_sales(table_id, period)
     if not stats:
         print("Region sales test failed: no stats returned")
         return False
@@ -76,8 +77,9 @@ def voronka_stats_test() -> bool:
 
     end_date = datetime.today()
     start_date = end_date - timedelta(days=7)
+    period = models.WbPeriod(start=start_date, end=end_date)
 
-    stats = voronka_stats.get_voronka_stats(table_id, start_date, end_date)
+    stats = voronka_stats.get_voronka_stats(table_id, period)
     if not stats:
         print("Voronka stats test failed: no stats returned")
         return False
@@ -86,8 +88,6 @@ def voronka_stats_test() -> bool:
     if not isinstance(sample.article, int) or not isinstance(sample.buyout_sum, float):
         print("Voronka stats test failed: invalid data structure")
         return False
-
-    print("Voronka stats test passed")
     return True
 
 

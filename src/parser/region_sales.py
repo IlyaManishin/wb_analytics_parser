@@ -1,9 +1,9 @@
 import time
-from datetime import datetime
 from typing import List
 from pydantic import BaseModel
 
 from . import utils
+from . import models
 from . import parsers_config as pconfig
 
 WAIT_TIME = 10
@@ -22,11 +22,11 @@ class RegionSale(BaseModel):
     sale_item_invoice_qty: int
 
 
-def get_region_sales(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[RegionSale]:
+def get_region_sales(spreadsheets_id: str, period: models.WbPeriod) -> List[RegionSale]:
     token = utils.get_wb_token(spreadsheets_id)
     headers = utils.get_auth_header(token)
 
-    dates_postfix = f'dateFrom={start_date.strftime(r"%Y-%m-%d")}&dateTo={end_date.strftime(r"%Y-%m-%d")}'
+    dates_postfix = f'dateFrom={period.start.strftime(r"%Y-%m-%d")}&dateTo={period.end.strftime(r"%Y-%m-%d")}'
     report_url = f"{pconfig.REGION_SALE_URL}?{dates_postfix}"
     result = utils.api_get(report_url, headers, req_wait_sec=WAIT_TIME)
     if not result:
