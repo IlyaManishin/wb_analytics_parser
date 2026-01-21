@@ -1,10 +1,16 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from contextlib import asynccontextmanager
 from datetime import datetime
 
 from tasks import register_tasks
 from parser import voronka_stats, region_sales
 from parser import models as p_models
+
+
+class AdvancedPeriodBody(p_models.BaseModel):
+    selected: p_models.WbPeriod
+    past: p_models.WbPeriod
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +28,18 @@ def voronka_stats_handler(
 ):
     period = p_models.WbPeriod(start=start_date, end=end_date)
     stats = voronka_stats.get_voronka_stats(spreadsheets_id, period)
+    return stats
+
+@app.post("/voronka-adv-stats", response_model=list[voronka_stats.VoronkaAdvancedStat])
+def voronka_advanced_stats_handler(
+    spreadsheets_id: str = Query(..., description="ID таблицы"),
+    body: AdvancedPeriodBody = Body(..., description="Периоды: selected и past")
+):
+    stats = voronka_stats.get_advanced_voronka_stats(
+        spreadsheets_id=spreadsheets_id,
+        selected=body.selected,
+        past=body.past
+    )
     return stats
 
 

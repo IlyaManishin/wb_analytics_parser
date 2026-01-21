@@ -31,6 +31,53 @@ class VoronkaStat(BaseModel):
     # deficit_days: Optional[int] = 0
 
 
+
+class VoronkaAdvancedStat(BaseModel):
+    article: int
+    seller_article: str
+    brand: str
+    category: str
+    stock_count: int
+
+    orders_count_1: int
+    orders_sum_1: float
+    avg_orders_per_day_1: float
+    avg_price_1: float
+    local_orders_1: int
+    buyout_percent_1: float
+    buyout_count_1: int
+    returns_sum_1: float
+    canceled_count_1: int
+    delivery_time_days_1: int
+    delivery_time_hours_1: int
+    delivery_time_mins_1: int
+    card_opens_1: int
+    to_cart_1: int
+    ctr_1: float
+
+    orders_count_2: int
+    orders_sum_2: float
+    avg_orders_per_day_2: float
+    avg_price_2: float
+    local_orders_2: int
+    buyout_percent_2: float
+    buyout_count_2: int
+    returns_sum_2: float
+    canceled_count_2: int
+    delivery_time_days_2: int
+    delivery_time_hours_2: int
+    delivery_time_mins_2: int
+    card_opens_2: int
+    to_cart_2: int
+    ctr_2: float
+
+    orders_count_diff: float
+    orders_sum_diff: float
+    buyout_count_diff: float
+    buyout_sum_diff: float
+    ctr_diff: float
+
+
 def get_voronka_data(wb_token: str,
                      selected_period: models.WbPeriod, past_period: models.WbPeriod = None) -> list[dict]:
     headers = utils.get_auth_header(wb_token)
@@ -115,4 +162,78 @@ def get_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod) -> List[V
 
 
 def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, past: models.WbPeriod):
-    pass
+    wb_token = utils.get_wb_token(spreadsheets_id)
+    cards = get_voronka_data(wb_token, selected_period=selected)
+    if not cards:
+        return []
+
+    stats = []
+    for card in cards:
+        product = card.get("product", {})
+        stat = card.get("statistic", {})
+
+        sel = stat.get("selected", {})
+        past_stat = stat.get("past", {})
+
+        sel_wb = sel.get("wbClub", {})
+        past_wb = past_stat.get("wbClub", {})
+
+        time_sel = sel.get("timeToReady", {})
+        time_past = past_stat.get("timeToReady", {})
+
+        open_count_1 = sel.get("openCount", 0)
+        open_count_2 = past_stat.get("openCount", 0)
+        to_cart_1 = sel.get("cartCount", 0)
+        to_cart_2 = past_stat.get("cartCount", 0)
+
+        ctr_1 = (to_cart_1 / open_count_1) if open_count_1 else 0
+        ctr_2 = (to_cart_2 / open_count_2) if open_count_2 else 0
+
+        stat_obj = VoronkaAdvancedStat(
+            article=product.get("nmId", 0),
+            seller_article=product.get("vendorCode", ""),
+            brand=product.get("brandName", ""),
+            category=product.get("subjectName", ""),
+            stock_count=product.get("stocks", {}).get("mp", 0) + product.get("stocks", {}).get("wb", 0),
+
+            orders_count_1=sel.get("orderCount", 0),
+            orders_sum_1=sel.get("orderSum", 0.0),
+            avg_orders_per_day_1=sel.get("avgOrdersCountPerDay", 0.0),
+            avg_price_1=sel.get("avgPrice", 0.0),
+            local_orders_1=sel_wb.get("orderCount", 0),
+            buyout_percent_1=sel_wb.get("buyoutPercent", 0.0),
+            buyout_count_1=sel.get("buyoutCount", 0),
+            returns_sum_1=sel.get("cancelSum", 0.0),
+            canceled_count_1=sel.get("cancelCount", 0),
+            delivery_time_days_1=time_sel.get("days", 0),
+            delivery_time_hours_1=time_sel.get("hours", 0),
+            delivery_time_mins_1=time_sel.get("mins", 0),
+            card_opens_1=open_count_1,
+            to_cart_1=to_cart_1,
+            ctr_1=ctr_1,
+
+            orders_count_2=past_stat.get("orderCount", 0),
+            orders_sum_2=past_stat.get("orderSum", 0.0),
+            avg_orders_per_day_2=past_stat.get("avgOrdersCountPerDay", 0.0),
+            avg_price_2=past_stat.get("avgPrice", 0.0),
+            local_orders_2=past_wb.get("orderCount", 0),
+            buyout_percent_2=past_wb.get("buyoutPercent", 0.0),
+            buyout_count_2=past_stat.get("buyoutCount", 0),
+            returns_sum_2=past_stat.get("cancelSum", 0.0),
+            canceled_count_2=past_stat.get("cancelCount", 0),
+            delivery_time_days_2=time_past.get("days", 0),
+            delivery_time_hours_2=time_past.get("hours", 0),
+            delivery_time_mins_2=time_past.get("mins", 0),
+            card_opens_2=open_count_2,
+            to_cart_2=to_cart_2,
+            ctr_2=ctr_2,
+
+            orders_count_diff=sel.get("orderCount", 0) - past_stat.get("orderCount", 0),
+            orders_sum_diff=sel.get("orderSum", 0.0) - past_stat.get("orderSum", 0.0),
+            buyout_count_diff=sel.get("buyoutCount", 0) - past_stat.get("buyoutCount", 0),
+            buyout_sum_diff=sel.get("buyoutSum", 0.0) - past_stat.get("buyoutSum", 0.0),
+            ctr_diff=ctr_1 - ctr_2
+        )
+        stats.append(stat_obj)
+
+    return stats
