@@ -29,11 +29,9 @@ class VoronkaStat(BaseModel):
     # deficit_days: Optional[int] = 0
 
 
-def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
-    token = utils.get_wb_token(spreadsheets_id)
-    headers = utils.get_auth_header(token)
-
-    stats: List[VoronkaStat] = []
+def get_voronka_data(wb_token: str, selected_period: dict, past_period: dict = None) -> list[dict]:
+    headers = utils.get_auth_header(wb_token)
+    all_cards = []
 
     MAX_PAGES = 30
     LIMIT = 1000
@@ -42,64 +40,75 @@ def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: date
     for i in range(MAX_PAGES):
         body = {
             "timezone": "Europe/Moscow",
-            "selectedPeriod": {
-                "start": start_date.strftime(r"%Y-%m-%d"),
-                "end": end_date.strftime(r"%Y-%m-%d"),
-            },
+            "selectedPeriod": selected_period,
+            "pastPeriod": past_period or {},
             "orderBy": {
                 "field": "orderSum",
                 "mode": "asc"
             },
-            "limit" : LIMIT,
-            "offset" : offset
+            "limit": LIMIT,
+            "offset": offset
         }
 
         result = utils.api_post(pconfig.VORONKA_URL,
                                 headers, body, req_wait_sec=WAIT_TIME)
         if not result:
-            return stats
+            return all_cards
         time.sleep(WAIT_TIME)
-        
+
         data = result.get("data", {})
         cards = data.get("products", [])
         if not cards:
             break
-
-        for card in cards:
-            product = card.get("product", {})
-            stat = card.get("statistic", {})
-            sel = stat.get("selected", {})
-            conv = sel.get("conversions", {})
-            stocks = product.get("stocks", {})
-
-            open_count = sel.get("openCount", 0)
-            cart_count = sel.get("cartCount", 0)
-
-            stat_obj = VoronkaStat(
-                article=product.get("nmId", 0),
-                seller_article=product.get("vendorCode", ""),
-                brand=product.get("brandName", ""),
-                category=product.get("subjectName", ""),
-                stock_count=stocks.get("mp", 0) + stocks.get("wb", 0),
-                middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
-                buyout_percent=conv.get("buyoutPercent", 0.0),
-                orders_count=sel.get("orderCount", 0),
-                orders_sum=sel.get("orderSum", 0.0),
-                lost_orders_count=sel.get("cancelCount", 0),
-                lost_orders_sum=sel.get("cancelSum", 0.0),
-                card_opens=open_count,
-                to_cart=cart_count,
-                ctr=(cart_count / open_count) if open_count else 0,
-                buyout_count=sel.get("buyoutCount", 0),
-                buyout_sum=sel.get("buyoutSum", 0.0),
-                returns_count=sel.get("cancelCount", 0),
-                returns_sum=sel.get("cancelSum", 0.0),
-            )
-
-            stats.append(stat_obj)
+        all_cards += cards
 
         if len(cards) < LIMIT:
             break
         offset += LIMIT
+
+    return all_cards
+
+
+def get_voronka_stats(spreadsheets_id: str, start_date: datetime, end_date: datetime) -> List[VoronkaStat]:
+    wb_token = utils.get_wb_token(spreadsheets_id)
+    selected_period = {"start": start_date.strftime(r"%Y-%m-%d"),
+                       "end": end_date.strftime(r"%Y-%m-%d")}
+
+    stats: List[VoronkaStat] = []
+    cards = get_voronka_data(wb_token, selected_period=selected_period)
+    if not cards:
+        return []
+
+    for card in cards:
+        product = card.get("product", {})
+        stat = card.get("statistic", {})
+        sel = stat.get("selected", {})
+        conv = sel.get("conversions", {})
+        stocks = product.get("stocks", {})
+
+        open_count = sel.get("openCount", 0)
+        cart_count = sel.get("cartCount", 0)
+
+        stat_obj = VoronkaStat(
+            article=product.get("nmId", 0),
+            seller_article=product.get("vendorCode", ""),
+            brand=product.get("brandName", ""),
+            category=product.get("subjectName", ""),
+            stock_count=stocks.get("mp", 0) + stocks.get("wb", 0),
+            middle_in_day_sales=sel.get("avgOrdersCountPerDay", 0.0),
+            buyout_percent=conv.get("buyoutPercent", 0.0),
+            orders_count=sel.get("orderCount", 0),
+            orders_sum=sel.get("orderSum", 0.0),
+            lost_orders_count=sel.get("cancelCount", 0),
+            lost_orders_sum=sel.get("cancelSum", 0.0),
+            card_opens=open_count,
+            to_cart=cart_count,
+            ctr=(cart_count / open_count) if open_count else 0,
+            buyout_count=sel.get("buyoutCount", 0),
+            buyout_sum=sel.get("buyoutSum", 0.0),
+            returns_count=sel.get("cancelCount", 0),
+            returns_sum=sel.get("cancelSum", 0.0),
+        )
+        stats.append(stat_obj)
 
     return stats
