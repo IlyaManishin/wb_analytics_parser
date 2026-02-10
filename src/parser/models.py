@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel
 
 class WbPeriod(BaseModel):
@@ -12,3 +13,12 @@ class WbPeriod(BaseModel):
         }
         return res
 
+class AdvancedPeriodBody(BaseModel):
+    selected: WbPeriod
+    past: Optional[WbPeriod] = None
+
+class FinanceReportRequest(BaseModel):
+    spreadsheets_id: str
+    sheet_name: str
+    start_date: datetime
+    end_date: datetime
