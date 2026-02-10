@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from parser import period_sales, region_sales, voronka_stats
+from parser import period_sales, region_sales, voronka_stats, finance_report
 from parser import utils, models
 from parser.data import db
 
@@ -99,6 +99,42 @@ def voronka_stats_test() -> bool:
     return True
 
 
+def finance_report_test() -> bool:
+    token = utils.get_wb_token(table_id)
+    if not token:
+        print("Finance report test failed: can't get token")
+        return False
+
+    end_date = datetime.today()
+    start_date = end_date - timedelta(days=7)
+    period = models.WbPeriod(start=start_date, end=end_date)
+
+    report_rows = finance_report.get_report_by_period(table_id,
+                                                      period.start,
+                                                      period.end)
+    if not report_rows:
+        print("Finance report test failed: no data returned")
+        return False
+
+    sample = report_rows[0]
+    required_keys = [
+        "№", "Номер поставки", "Предмет", "Код номенклатуры", "Бренд",
+        "Артикул поставщика", "Дата заказа покупателем", "Дата продажи",
+        "Кол-во", "Цена розничная"
+    ]
+
+    for key in required_keys:
+        if key not in sample:
+            print(f"Finance report test failed: missing key '{key}' in sample")
+            return False
+
+    if not isinstance(sample["№"], int) or not isinstance(sample["Код номенклатуры"], int):
+        print("Finance report test failed: invalid data types in sample")
+        return False
+
+    return True
+
+
 def db_tests() -> bool:
     db.init_test_db()
     today = date.today()
@@ -129,8 +165,10 @@ def run_tests():
         # articles_data_test,
         # period_sales_test,
         # db_tests,
-        voronka_stats_test,
+        # voronka_stats_test,
         # region_sales_test
+        finance_report_test
+        
     ]
     results = [test() for test in tests]
     if all(results):
