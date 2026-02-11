@@ -9,6 +9,7 @@ REQUEST_ATTEMPT_COUNT = 3
 REQUEST_WAIT_SEC = 5
 
 #____COMMON_DATA___
+SOCKET_WAIT_SEC = 500
 WB_CARDS_LIST_URL = "https://content-api.wildberries.ru/content/v2/get/cards/list"
 CARDS_WAIT_TIME = 15
 
@@ -55,7 +56,7 @@ token_path = os.path.join(security_folder, "table_id.txt")
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
 
-socket.setdefaulttimeout(300) 
+socket.setdefaulttimeout(SOCKET_WAIT_SEC) 
 credentials = service_account.Credentials.from_service_account_file(
     creds_path, scopes=scope)
 service = build('sheets', 'v4', credentials=credentials)
