@@ -38,7 +38,7 @@ def get_product_names(token: str) -> dict:
             attempts=5,
             req_wait_sec=CARDS_WAIT_TIME
         )
-        time.sleep(CARDS_WAIT_TIME)
+        time.sleep(3)
 
         if not response:
             logging.error("Empty response from WB cards API")
