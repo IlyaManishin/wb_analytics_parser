@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime
 
 from .models import WbPeriod
@@ -31,12 +32,13 @@ def get_product_names(token: str) -> dict:
         }
 
         response = utils.api_post(
-            WB_CARDS_LIST_URL,
+            CARDS_LIST_URL,
             headers=headers,
             body=payload,
             attempts=5,
             req_wait_sec=CARDS_WAIT_TIME
         )
+        time.sleep(CARDS_WAIT_TIME)
 
         if not response:
             logging.error("Empty response from WB cards API")

@@ -10,7 +10,7 @@ REQUEST_WAIT_SEC = 5
 
 #____COMMON_DATA___
 SOCKET_WAIT_SEC = 500
-WB_CARDS_LIST_URL = "https://content-api.wildberries.ru/content/v2/get/cards/list"
+CARDS_LIST_URL = "https://content-api.wildberries.ru/content/v2/get/cards/list"
 CARDS_WAIT_TIME = 15
 
 # ____SALES_STATS___
