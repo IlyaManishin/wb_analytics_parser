@@ -171,3 +171,4 @@ def write_finance_report(spreadsheet_id: str, token: str, sheet_name: str, perio
     #     for row in values:
     #         file.write(";".join([str(i) for i in row]) + "\n")
     utils.write_entries_to_google(spreadsheet_id, range_, report_entries)
+    logging.info("Finish loading fin report")
