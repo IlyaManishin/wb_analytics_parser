@@ -1,7 +1,7 @@
 import os
-import httplib2
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+import socket
 
 # PORT = 8000
 
@@ -51,7 +51,7 @@ token_path = os.path.join(security_folder, "table_id.txt")
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
 
-http = httplib2.Http(timeout=300)
+socket.setdefaulttimeout(300) 
 credentials = service_account.Credentials.from_service_account_file(
     creds_path, scopes=scope)
-service = build('sheets', 'v4', credentials=credentials, http=http)
+service = build('sheets', 'v4', credentials=credentials)
