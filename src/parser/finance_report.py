@@ -6,21 +6,82 @@ from . import utils
 from .parsers_config import *
 
 
-def parse_report_detail(data: list[dict]) -> list[dict]:
+def get_product_names(token: str) -> dict:
+    headers = utils.get_auth_header(token)
+
+    cursor_updated_at = None
+    cursor_nm_id = None
+
+    result = {}
+    limit = 100
+    max_pages = 30
+    for i in range(max_pages):
+        cursor = {"limit": limit}
+        if cursor_updated_at is not None and cursor_nm_id is not None:
+            cursor["updatedAt"] = cursor_updated_at
+            cursor["nmID"] = cursor_nm_id
+
+        payload = {
+            "settings": {
+                "filter": {
+                    "withPhoto": -1
+                },
+                "cursor": cursor
+            }
+        }
+
+        response = utils.api_post(
+            WB_CARDS_LIST_URL,
+            headers=headers,
+            body=payload,
+            attempts=5,
+            req_wait_sec=CARDS_WAIT_TIME
+        )
+
+        if not response:
+            logging.error("Empty response from WB cards API")
+            break
+
+        cards = response.get("cards", [])
+        for card in cards:
+            nm_id = card.get("nmID")
+            title = card.get("title")
+
+            if nm_id is None or title is None:
+                continue
+
+            result[nm_id] = title
+
+        cursor_data = response.get("cursor", {})
+        cursor_updated_at = cursor_data.get("updatedAt")
+        cursor_nm_id = cursor_data.get("nmID")
+        total = cursor_data.get("total", 0)
+
+        if total < limit:
+            break
+        if cursor_updated_at is None or cursor_nm_id is None:
+            break
+
+    return result
+
+
+def parse_report_detail(data: list[dict], product_names: dict) -> list[dict]:
     if len(data) == 0:
         return []
 
     parsed: list[dict] = []
 
     for i, row in enumerate(data, start=1):
+        nm_id = int(row.get("nm_id"))
         parsed.append({
             "№": i,
             "Номер поставки": row.get("realizationreport_id"),
+            "Артикул" : str(nm_id),
             "Предмет": row.get("subject_name"),
             "Код номенклатуры": row.get("nm_id"),
             "Бренд": row.get("brand_name"),
             "Артикул поставщика": row.get("sa_name"),
-            "Название": "N/A",  # пока замокано
+            "Название": product_names.get(nm_id, ""),
             "Размер": row.get("ts_name"),
             "Баркод": row.get("barcode"),
             "Тип документа": row.get("doc_type_name"),
@@ -93,13 +154,14 @@ def get_report_by_period(token: str, date_from: datetime, date_to: datetime) -> 
     if not response:
         logging.error("Empty response from WB API")
         return []
-    return parse_report_detail(response)
+
+    product_names = get_product_names(token) or {}
+    return parse_report_detail(response, product_names)
 
 
 def write_finance_report(spreadsheet_id: str, token: str, sheet_name: str, period: WbPeriod):
     report_entries = get_report_by_period(
         token, period.start, period.end)
-
     range_ = f"{sheet_name}!{FIN_REPORT_RANGE}"
     # with open("output.csv", "w") as file:
     #     headers = list(report_entries[0].keys())

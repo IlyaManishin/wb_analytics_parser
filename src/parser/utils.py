@@ -58,7 +58,7 @@ def _send_request(url: str,
         except UnathorizedExc as err:
             raise
         except Exception as err:
-            if resp.status_code == 429:
+            if resp and resp.status_code == 429:
                 time.sleep(on_error_wait_sec)
                 continue
             logging.exception(err)

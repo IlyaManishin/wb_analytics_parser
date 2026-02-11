@@ -8,6 +8,10 @@ import socket
 REQUEST_ATTEMPT_COUNT = 3
 REQUEST_WAIT_SEC = 5
 
+#____COMMON_DATA___
+WB_CARDS_LIST_URL = "https://content-api.wildberries.ru/content/v2/get/cards/list"
+CARDS_WAIT_TIME = 15
+
 # ____SALES_STATS___
 SALES_STATS_URL = "https://seller-analytics-api.wildberries.ru/api/v2/stocks-report/products/products"
 SALES_URL = "https://statistics-api.wildberries.ru/api/v1/supplier/sales"
