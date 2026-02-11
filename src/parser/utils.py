@@ -51,16 +51,17 @@ def _send_request(url: str,
             if resp.status_code == 401:
                 raise UnathorizedExc()
             if resp.status_code != 200:
-                raise Exception
+                raise Exception(f"Request error, status: {resp.status_code}")
 
             data = json.loads(resp.text)
             return data
         except UnathorizedExc as err:
             raise
         except Exception as err:
-            if resp and resp.status_code != 429:
-                logging.exception(err)
-            time.sleep(on_error_wait_sec)
+            if resp.status_code == 429:
+                time.sleep(on_error_wait_sec)
+                continue
+            logging.exception(err)
     logging.error(
         f"Invalid request: url={url}" + f", status={resp.status_code}" if resp else "")
     return None
