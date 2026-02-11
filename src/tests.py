@@ -109,7 +109,7 @@ def finance_report_test() -> bool:
     start_date = end_date - timedelta(days=7)
     period = models.WbPeriod(start=start_date, end=end_date)
 
-    report_rows = finance_report.get_report_by_period(table_id,
+    report_rows = finance_report.get_report_by_period(token,
                                                       period.start,
                                                       period.end)
     if not report_rows:

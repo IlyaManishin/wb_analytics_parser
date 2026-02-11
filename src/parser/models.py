@@ -19,6 +19,7 @@ class AdvancedPeriodBody(BaseModel):
 
 class FinanceReportRequest(BaseModel):
     spreadsheets_id: str
+    token: str
     sheet_name: str
     start_date: datetime
     end_date: datetime

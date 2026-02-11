@@ -38,7 +38,7 @@ TOKEN_RANGE = "A1:A1"
 WB_REPORT_URL = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
 FIN_REPORT_ATTEMPTS = 2
 FIN_REPORT_WAIT_TIME = 30
-FIN_REPORT_RANGE = "AK:ZZ"
+FIN_REPORT_RANGE = "E:ZZ"
 
 
 PARSER_DIR = os.path.dirname(os.path.realpath(__file__))

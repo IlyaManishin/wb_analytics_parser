@@ -60,6 +60,7 @@ def region_stats_post_handler(payload: FinanceReportRequest):
     )
     finance_report.write_finance_report(
         spreadsheet_id=payload.spreadsheets_id,
+        token=payload.token,
         period=period,
         sheet_name=payload.sheet_name
     )

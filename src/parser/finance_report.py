@@ -81,12 +81,7 @@ def parse_report_detail(data: list[dict]) -> list[dict]:
     return parsed
 
 
-def get_report_by_period(spreadsheet_id: str, date_from: datetime, date_to: datetime) -> list[dict]:
-    token = utils.get_wb_token(spreadsheet_id)
-    if not token:
-        logging.error("Can't get WB token")
-        return []
-
+def get_report_by_period(token: str, date_from: datetime, date_to: datetime) -> list[dict]:
     date_from_str = date_from.strftime("%Y-%m-%d")
     date_to_str = date_to.strftime("%Y-%m-%d")
 
@@ -101,28 +96,14 @@ def get_report_by_period(spreadsheet_id: str, date_from: datetime, date_to: date
     return parse_report_detail(response)
 
 
-
-def write_to_google_sheet(spreadsheet_id: str, range_: str, data: list[dict]):
-    headers = list(data[0].keys()) if data else []
-    values = [headers] + [list(row.values()) for row in data]
-
-    body = {
-        "values": values
-    }
-    try:
-        service.spreadsheets().values().update(
-            spreadsheetId=spreadsheet_id,
-            range=range_,
-            valueInputOption="RAW",
-            body=body
-        ).execute()
-    except Exception as err:
-        logging.exception(err)
-
-
-def write_finance_report(spreadsheet_id: str, sheet_name: str, period: WbPeriod):
+def write_finance_report(spreadsheet_id: str, token: str, sheet_name: str, period: WbPeriod):
     report_entries = get_report_by_period(
-        spreadsheet_id, period.start, period.end)
+        token, period.start, period.end)
 
     range_ = f"{sheet_name}!{FIN_REPORT_RANGE}"
-    write_to_google_sheet(spreadsheet_id, range_, report_entries)
+    # with open("output.csv", "w") as file:
+    #     headers = list(report_entries[0].keys())
+    #     values = [headers] + [list(row.values()) for row in report_entries]
+    #     for row in values:
+    #         file.write(";".join([str(i) for i in row]) + "\n")
+    utils.write_entries_to_google(spreadsheet_id, range_, report_entries)

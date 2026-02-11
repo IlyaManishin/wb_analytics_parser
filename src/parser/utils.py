@@ -78,7 +78,7 @@ def api_post(url: str, headers: dict, body: dict,
     return _send_request(url, headers, attempts, req_wait_sec, RequestTypes.POST, body)
 
 
-def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
+def read_google_table(spreadsheets_id, name, table_range) -> list[list[str]]:
     tryings = 3
     values = None
     for i in range(tryings):
@@ -93,9 +93,29 @@ def read_table(spreadsheets_id, name, table_range) -> list[list[str]]:
         return []
     return values
 
+def write_entries_to_google(spreadsheet_id: str, range_: str, data: list[dict]):
+    if len(data) == 0:
+        return
+    
+    headers = list(data[0].keys())
+    values = [headers] + [list(entry.values()) for entry in data]
+
+    body = {
+        "values": values
+    }
+    try:
+        service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range=range_,
+            valueInputOption="RAW",
+            body=body
+        ).execute()
+    except Exception as err:
+        logging.exception(err)
+
 
 def get_article_data(table_id: str) -> list[ArticleData]:
-    data = read_table(table_id, PROFITABILITY_SHEET_NAME,
+    data = read_google_table(table_id, PROFITABILITY_SHEET_NAME,
                       PROFITABILITY_ARTICLES_RANGE)
     if not data:
         return None
@@ -119,7 +139,7 @@ def get_article_data(table_id: str) -> list[ArticleData]:
 
 
 def get_wb_token(table_id: str) -> str:
-    data = read_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
+    data = read_google_table(table_id, TOKEN_SHEET_NAME, TOKEN_RANGE)
     if not data:
         return None
     try:
