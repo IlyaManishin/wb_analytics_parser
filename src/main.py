@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Body
+from fastapi import FastAPI, Query, Body, BackgroundTasks
 from contextlib import asynccontextmanager
 from datetime import datetime
 
@@ -53,14 +53,17 @@ def region_stats_handler(
 
 
 @app.post("/fin-report")
-def region_stats_post_handler(payload: FinanceReportRequest):
+def region_stats_post_handler(payload: FinanceReportRequest, background_tasks: BackgroundTasks):
     period = WbPeriod(
         start=payload.start_date,
         end=payload.end_date
     )
-    finance_report.write_finance_report(
+    background_tasks.add_task(
+        finance_report.write_finance_report,
         spreadsheet_id=payload.spreadsheets_id,
         token=payload.token,
         period=period,
         sheet_name=payload.sheet_name
     )
+
+    return {"status": "started"}
