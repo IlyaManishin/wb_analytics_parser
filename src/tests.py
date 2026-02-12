@@ -75,11 +75,11 @@ def voronka_stats_test() -> bool:
         print("Voronka stats test failed: no article data")
         return False
 
-    end_date1 = datetime.today()
-    start_date1 = end_date1 - timedelta(days=7)
-    start_date2 = start_date1 - timedelta(days=7)
-    selected = models.WbPeriod(start=start_date1, end=end_date1)
-    past = models.WbPeriod(start=start_date2, end=start_date1)
+    end_date = datetime.today()
+    mid_date = end_date - timedelta(days=7)
+    start_date = mid_date - timedelta(days=7)
+    selected = models.WbPeriod(start=mid_date, end=end_date)
+    past = models.WbPeriod(start=start_date, end=mid_date - timedelta(days=1))
 
     stats = voronka_stats.get_voronka_stats(table_id, selected)
     if not stats:
@@ -165,10 +165,10 @@ def run_tests():
         # articles_data_test,
         # period_sales_test,
         # db_tests,
-        # voronka_stats_test,
+        voronka_stats_test,
         # region_sales_test
-        finance_report_test
-        
+        # finance_report_test
+
     ]
     results = [test() for test in tests]
     if all(results):

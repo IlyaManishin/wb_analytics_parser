@@ -31,7 +31,6 @@ class VoronkaStat(BaseModel):
     # deficit_days: Optional[int] = 0
 
 
-
 class VoronkaAdvancedStat(BaseModel):
     article: int
     seller_article: str
@@ -163,7 +162,8 @@ def get_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod) -> List[V
 
 def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, past: models.WbPeriod):
     wb_token = utils.get_wb_token(spreadsheets_id)
-    cards = get_voronka_data(wb_token, selected_period=selected, past_period=past)
+    cards = get_voronka_data(
+        wb_token, selected_period=selected, past_period=past)
     if not cards:
         return []
 
@@ -189,20 +189,30 @@ def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, 
         ctr_1 = (to_cart_1 / open_count_1) if open_count_1 else 0
         ctr_2 = (to_cart_2 / open_count_2) if open_count_2 else 0
 
+        order_count_1 = sel.get("orderCount", 0)
+        buyout_count_1 = sel.get("buyoutCount", 0)
+
+        order_count_2 = past_stat.get("orderCount", 0)
+        buyout_count_2 = past_stat.get("buyoutCount", 0)
+
+        buyout_percent_1 = buyout_count_1 / order_count_1 if order_count_1 != 0 else 0
+        buyout_percent_2 = buyout_count_2 / order_count_2 if order_count_2 != 0 else 0
+
         stat_obj = VoronkaAdvancedStat(
             article=product.get("nmId", 0),
             seller_article=product.get("vendorCode", ""),
             brand=product.get("brandName", ""),
             category=product.get("subjectName", ""),
-            stock_count=product.get("stocks", {}).get("mp", 0) + product.get("stocks", {}).get("wb", 0),
+            stock_count=product.get("stocks", {}).get(
+                "mp", 0) + product.get("stocks", {}).get("wb", 0),
 
-            orders_count_1=sel.get("orderCount", 0),
+            orders_count_1=order_count_1,
             orders_sum_1=sel.get("orderSum", 0.0),
             avg_orders_per_day_1=sel.get("avgOrdersCountPerDay", 0.0),
             avg_price_1=sel.get("avgPrice", 0.0),
-            local_orders_1=sel_wb.get("orderCount", 0),
-            buyout_percent_1=sel_wb.get("buyoutPercent", 0.0),
-            buyout_count_1=sel.get("buyoutCount", 0),
+            local_orders_1=sel_wb.get("localizationPercent", 0),
+            buyout_percent_1=buyout_percent_1,
+            buyout_count_1=buyout_count_1,
             returns_sum_1=sel.get("cancelSum", 0.0),
             canceled_count_1=sel.get("cancelCount", 0),
             delivery_time_days_1=time_sel.get("days", 0),
@@ -212,13 +222,13 @@ def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, 
             to_cart_1=to_cart_1,
             ctr_1=ctr_1,
 
-            orders_count_2=past_stat.get("orderCount", 0),
+            orders_count_2=order_count_2,
             orders_sum_2=past_stat.get("orderSum", 0.0),
             avg_orders_per_day_2=past_stat.get("avgOrdersCountPerDay", 0.0),
             avg_price_2=past_stat.get("avgPrice", 0.0),
-            local_orders_2=past_wb.get("orderCount", 0),
-            buyout_percent_2=past_wb.get("buyoutPercent", 0.0),
-            buyout_count_2=past_stat.get("buyoutCount", 0),
+            local_orders_2=past_wb.get("localizationPercent", 0),
+            buyout_percent_2=buyout_percent_2,
+            buyout_count_2=buyout_count_2,
             returns_sum_2=past_stat.get("cancelSum", 0.0),
             canceled_count_2=past_stat.get("cancelCount", 0),
             delivery_time_days_2=time_past.get("days", 0),
@@ -228,10 +238,12 @@ def get_advanced_voronka_stats(spreadsheets_id: str, selected: models.WbPeriod, 
             to_cart_2=to_cart_2,
             ctr_2=ctr_2,
 
-            orders_count_diff=sel.get("orderCount", 0) - past_stat.get("orderCount", 0),
-            orders_sum_diff=sel.get("orderSum", 0.0) - past_stat.get("orderSum", 0.0),
-            buyout_count_diff=sel.get("buyoutCount", 0) - past_stat.get("buyoutCount", 0),
-            buyout_sum_diff=sel.get("buyoutSum", 0.0) - past_stat.get("buyoutSum", 0.0),
+            orders_count_diff=order_count_1 - order_count_2,
+            orders_sum_diff=sel.get("orderSum", 0.0) -
+            past_stat.get("orderSum", 0.0),
+            buyout_count_diff=buyout_count_1 - buyout_count_2,
+            buyout_sum_diff=sel.get("buyoutSum", 0.0) -
+            past_stat.get("buyoutSum", 0.0),
             ctr_diff=ctr_1 - ctr_2
         )
         stats.append(stat_obj)
