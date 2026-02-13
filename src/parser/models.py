@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import date
 from typing import Optional
 from pydantic import BaseModel
 
 class WbPeriod(BaseModel):
-    start: datetime
-    end: datetime
+    start: date
+    end: date
 
     def to_dict(self):
         res = {
@@ -21,5 +21,5 @@ class FinanceReportRequest(BaseModel):
     spreadsheets_id: str
     token: str
     sheet_name: str
-    start_date: datetime
-    end_date: datetime
+    start_date: date
+    end_date: date

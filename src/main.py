@@ -53,7 +53,7 @@ def region_stats_handler(
 
 
 @app.post("/fin-report")
-def region_stats_post_handler(payload: FinanceReportRequest):
+def fin_report_handler(payload: FinanceReportRequest):
     period = WbPeriod(
         start=payload.start_date,
         end=payload.end_date
