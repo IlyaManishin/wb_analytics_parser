@@ -94,7 +94,7 @@ def read_google_table(spreadsheets_id, name, table_range) -> list[list[str]]:
         return []
     return values
 
-def write_entries_to_google(spreadsheet_id: str, range_: str, data: list[dict]):
+def write_entries_to_google(spreadsheet_id: str, range_: str, data: list[dict], attempts=3):
     if len(data) == 0:
         return
     
@@ -104,15 +104,18 @@ def write_entries_to_google(spreadsheet_id: str, range_: str, data: list[dict]):
     body = {
         "values": values
     }
-    try:
-        service.spreadsheets().values().update(
-            spreadsheetId=spreadsheet_id,
-            range=range_,
-            valueInputOption="RAW",
-            body=body
-        ).execute()
-    except Exception as err:
-        logging.exception(err)
+    for i in range(attempts):
+        try:
+            service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=range_,
+                valueInputOption="RAW",
+                body=body
+            ).execute()
+            break
+        except Exception as err:
+            logging.exception(err)
+            time.sleep(5)
 
 
 def get_article_data(table_id: str) -> list[ArticleData]:
